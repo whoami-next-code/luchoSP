@@ -29,4 +29,3 @@ export class ReportesService {
     return await this.repo.find({ order: { creadoEn: 'DESC' } });
   }
 }
-

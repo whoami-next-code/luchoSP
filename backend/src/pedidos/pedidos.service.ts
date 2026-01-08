@@ -44,7 +44,7 @@ export class PedidosService {
   async createCashOnDeliveryOrder(orderData: any) {
     // Generar número de pedido único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    
+
     const orderEntity = this.repo.create({
       orderNumber,
       customerName: orderData.customerName,
@@ -61,7 +61,7 @@ export class PedidosService {
       orderStatus: 'PENDING',
       notes: orderData.notes || '',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     return this.repo.save(orderEntity);
@@ -69,7 +69,7 @@ export class PedidosService {
 
   async getOrderByPaymentId(paymentId: string) {
     return this.repo.findOne({
-      where: { stripePaymentId: paymentId }
+      where: { stripePaymentId: paymentId },
     });
   }
 
@@ -82,11 +82,15 @@ export class PedidosService {
 
     // Buscar por orderNumber si no es un ID numérico
     return this.repo.findOne({
-      where: { orderNumber: orderId }
+      where: { orderNumber: orderId },
     });
   }
 
-  async updateOrderStatus(orderId: number, status: Pedido['orderStatus'], paymentId?: string) {
+  async updateOrderStatus(
+    orderId: number,
+    status: Pedido['orderStatus'],
+    paymentId?: string,
+  ) {
     const order = await this.repo.findOneBy({ id: orderId });
     if (!order) {
       throw new NotFoundException('Pedido no encontrado');
@@ -94,7 +98,7 @@ export class PedidosService {
 
     order.orderStatus = status;
     order.updatedAt = new Date();
-    
+
     if (paymentId) {
       order.stripePaymentId = paymentId;
       order.paymentStatus = 'COMPLETED';

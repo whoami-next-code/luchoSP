@@ -1,0 +1,14 @@
+.scrollgeneric {
+line-height: 1px;
+font-size: 1px;
+position: absolute;
+top: 0; left: 0;
+}
+.vscrollerbase {
+width: 10px;
+}
+.vscrollerbar {
+width: 8px;
+background-color: #135571;
+border-radius:1px;
+}

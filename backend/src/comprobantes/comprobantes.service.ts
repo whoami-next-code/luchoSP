@@ -68,10 +68,12 @@ export class ComprobantesService {
     ruc: '20123456789',
     address: 'Av. Industrial 123, Lima, Perú',
     phone: '+51 1 234-5678',
-    email: 'ventas@industriasp.com'
+    email: 'ventas@industriasp.com',
   };
 
-  async generateComprobante(orderData: ComprobanteData): Promise<ComprobanteResponse> {
+  async generateComprobante(
+    orderData: ComprobanteData,
+  ): Promise<ComprobanteResponse> {
     // Determinar tipo de comprobante basado en el DNI/RUC
     const documentType = this.getDocumentType(orderData.customerDni);
     const comprobanteType = documentType === 'RUC' ? 'BOLETA' : 'VOUCHER';
@@ -88,28 +90,31 @@ export class ComprobantesService {
       document: orderData.customerDni,
       documentType,
       email: orderData.customerEmail,
-      phone: orderData.customerPhone
+      phone: orderData.customerPhone,
     };
 
     // Preparar items del comprobante
-    const items = orderData.items.map(item => ({
+    const items = orderData.items.map((item) => ({
       description: item.name,
       quantity: item.quantity,
       unitPrice: item.price,
-      total: item.total
+      total: item.total,
     }));
 
     // Preparar totales
     const totals = {
       subtotal: orderData.subtotal,
       shipping: orderData.shipping,
-      total: orderData.total
+      total: orderData.total,
     };
 
     // Preparar información de pago
     const paymentInfo = {
-      method: orderData.paymentMethod === 'CARD' ? 'Tarjeta de Crédito/Débito' : 'Pago Contra Entrega',
-      status: this.getPaymentStatusText(orderData.paymentStatus)
+      method:
+        orderData.paymentMethod === 'CARD'
+          ? 'Tarjeta de Crédito/Débito'
+          : 'Pago Contra Entrega',
+      status: this.getPaymentStatusText(orderData.paymentStatus),
     };
 
     // Generar código QR (simulado)
@@ -126,7 +131,7 @@ export class ComprobantesService {
       totals,
       paymentInfo,
       qrCode,
-      hash
+      hash,
     };
 
     return comprobante;
@@ -143,7 +148,10 @@ export class ComprobantesService {
     return `${prefix}-${number.toString().padStart(6, '0')}`;
   }
 
-  private generateSecurityHash(orderData: ComprobanteData, comprobanteId: string): string {
+  private generateSecurityHash(
+    orderData: ComprobanteData,
+    comprobanteId: string,
+  ): string {
     const dataToHash = `${comprobanteId}${orderData.orderNumber}${orderData.total}${orderData.customerDni}`;
     // En producción, usar una librería de hash real como crypto
     return Buffer.from(dataToHash).toString('base64').substring(0, 16);
@@ -185,15 +193,62 @@ export class ComprobantesService {
     return statusMap[status] ?? status;
   }
 
-  async getComprobante(comprobanteId: string): Promise<ComprobanteResponse | null> {
+  async getComprobante(
+    comprobanteId: string,
+  ): Promise<ComprobanteResponse | null> {
     // En producción, esto consultaría la base de datos
     // Por ahora retornamos null para simular que no existe
     return null;
   }
 
-  async verifyComprobante(comprobanteId: string, hash: string): Promise<boolean> {
+  async verifyComprobante(
+    comprobanteId: string,
+    hash: string,
+  ): Promise<boolean> {
     // En producción, esto verificaría el hash contra la base de datos
     // Por ahora retornamos true para simular verificación exitosa
     return true;
+  }
+
+  async generatePDF(comprobante: ComprobanteResponse): Promise<Buffer> {
+    // En producción, usar una librería como pdfkit o puppeteer para generar PDF real
+    // Por ahora, generamos un PDF básico usando texto plano
+    const pdfContent = `
+COMPROBANTE ELECTRÓNICO
+${comprobante.type === 'BOLETA' ? 'BOLETA DE VENTA' : 'VOUCHER DE VENTA'}
+
+ID: ${comprobante.id}
+Número de Pedido: ${comprobante.orderNumber}
+Fecha de Emisión: ${comprobante.issueDate.toLocaleDateString('es-PE')}
+
+EMPRESA:
+${comprobante.companyInfo.name}
+RUC: ${comprobante.companyInfo.ruc}
+${comprobante.companyInfo.address}
+Tel: ${comprobante.companyInfo.phone}
+Email: ${comprobante.companyInfo.email}
+
+CLIENTE:
+${comprobante.customerInfo.name}
+${comprobante.customerInfo.documentType}: ${comprobante.customerInfo.document}
+${comprobante.customerInfo.email ? `Email: ${comprobante.customerInfo.email}` : ''}
+${comprobante.customerInfo.phone ? `Tel: ${comprobante.customerInfo.phone}` : ''}
+
+ITEMS:
+${comprobante.items.map((item, i) => `${i + 1}. ${item.description} - Cant: ${item.quantity} - Precio: S/ ${item.unitPrice.toFixed(2)} - Total: S/ ${item.total.toFixed(2)}`).join('\n')}
+
+TOTALES:
+Subtotal: S/ ${comprobante.totals.subtotal.toFixed(2)}
+Envío: S/ ${comprobante.totals.shipping.toFixed(2)}
+TOTAL: S/ ${comprobante.totals.total.toFixed(2)}
+
+Método de Pago: ${comprobante.paymentInfo.method}
+Estado: ${comprobante.paymentInfo.status}
+
+Hash de Seguridad: ${comprobante.hash}
+`;
+
+    // Convertir a Buffer (en producción, usar pdfkit para generar PDF real)
+    return Buffer.from(pdfContent, 'utf-8');
   }
 }

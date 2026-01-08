@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsNumber, IsPositive, Min } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  Min,
+} from 'class-validator';
 
 export class CrearCompraDto {
   @IsString()
@@ -17,4 +23,3 @@ export class CrearCompraDto {
   @Min(0)
   precioUnitario: number;
 }
-

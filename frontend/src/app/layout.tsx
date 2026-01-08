@@ -1,32 +1,85 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Roboto_Condensed } from "next/font/google";
+import { Inter, Roboto } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import Image from "next/image";
+import { HeaderChrome, FooterChrome } from "@/components/layout/Chrome";
+import { PublicSocketProvider } from "@/lib/PublicSocketProvider";
 import { CartProvider } from "@/components/cart/CartContext";
 import { CartUIProvider } from "@/components/cart/CartUIContext";
-import CartSidebar from "@/components/cart/CartSidebar";
 import { ToastProvider } from "@/components/ui/Toaster";
-import { CartIndicator } from "@/components/cart/CartIndicator";
+import { AuthProvider } from "@/contexts/AuthContext";
+import CartSidebar from "@/components/cart/CartSidebar";
 
-const industrialSans = IBM_Plex_Sans({
-  variable: "--font-industrial-sans",
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300","400","500","600","700"],
+  variable: "--font-inter",
 });
 
-const industrialHeading = Roboto_Condensed({
-  variable: "--font-industrial-condensed",
+const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["300","400","700"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
-  title: "Industrias SP",
-  description: "Equipos industriales para la industria alimentaria",
+  title: {
+    default: "Industrias SP - Soluciones Industriales",
+    template: "%s | Industrias SP"
+  },
+  description: "Soluciones industriales integrales con más de 15 años de experiencia. Especialistas en equipamiento y servicios para la industria peruana.",
+  keywords: ["equipos industriales", "maquinaria industrial", "compresores", "soldadoras", "generadores", "industria peruana"],
+  authors: [{ name: "Industrias SP" }],
+  creator: "Industrias SP",
+  publisher: "Industrias SP",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://industriasp.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_PE",
+    url: "/",
+    siteName: "Industrias SP",
+    title: "Industrias SP - Soluciones Industriales",
+    description: "Soluciones industriales integrales con más de 15 años de experiencia.",
+    images: [
+      {
+        url: "/brand/kadhavu/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Industrias SP - Soluciones Industriales",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Industrias SP - Soluciones Industriales",
+    description: "Soluciones industriales integrales con más de 15 años de experiencia.",
+    images: ["/brand/kadhavu/images/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: "/brand/kadhavu/images/favicon.png",
     shortcut: "/brand/kadhavu/images/favicon.png",
+    apple: "/brand/kadhavu/images/favicon.png",
+  },
+  verification: {
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
   },
 };
 
@@ -38,44 +91,22 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${industrialSans.variable} ${industrialHeading.variable} antialiased`}
+        className={`${inter.variable} ${roboto.variable} antialiased`}
       >
-        <CartProvider>
-        <CartUIProvider>
-        <ToastProvider>
-        {/* Enlace para saltar al contenido principal (accesibilidad) */}
-        <a href="#principal" className="sr-only focus:not-sr-only focus:block focus:mb-2">Saltar al contenido principal</a>
-
-        <header className="border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50" role="banner">
-          <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between" aria-label="Navegación principal" role="navigation">
-            <Link href="/" className="font-semibold flex items-center gap-2">
-              <Image src="/brand/kadhavu/images/logo.png" alt="Industrias SP" width={28} height={28} />
-              <span>Industrias SP</span>
-            </Link>
-            <div className="flex gap-4 text-sm">
-              <Link href="/catalogo">Catálogo</Link>
-              <CartIndicator />
-              <Link href="/mis-pedidos">Mis pedidos</Link>
-              <Link href="/mantenimiento">Mantenimiento</Link>
-              <Link href="/contacto">Contacto</Link>
-              <span className="text-zinc-300">|</span>
-              <Link href="/auth/login">Login</Link>
-              <Link href="/auth/register">Registro</Link>
-              <Link href="/perfil">Perfil</Link>
-            </div>
-          </nav>
-        </header>
-        <main id="principal" className="min-h-[calc(100vh-56px)]" role="main">{children}</main>
-        <footer className="border-t py-6 text-center text-sm text-zinc-500" role="contentinfo">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-2">
-            <Image src="/brand/kadhavu/images/logo-light.png" alt="Industrias SP" width={20} height={20} />
-            <span>© {new Date().getFullYear()} Industrias SP</span>
-          </div>
-        </footer>
-        <CartSidebar />
-        </ToastProvider>
-        </CartUIProvider>
-        </CartProvider>
+        <AuthProvider>
+          <PublicSocketProvider>
+            <CartProvider>
+              <CartUIProvider>
+                <ToastProvider>
+                  <HeaderChrome />
+                  {children}
+                  <CartSidebar />
+                  <FooterChrome />
+                </ToastProvider>
+              </CartUIProvider>
+            </CartProvider>
+          </PublicSocketProvider>
+        </AuthProvider>
       </body>
     </html>
   );

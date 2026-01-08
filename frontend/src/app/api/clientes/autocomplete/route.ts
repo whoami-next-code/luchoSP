@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 // Requiere configurar un token en el entorno del frontend:
 //  - DECOLECTA_API_TOKEN=sk_... (NO usar NEXT_PUBLIC_ para evitar exponerlo al cliente)
 
-function cleanDigits(s: string) {
+function cleanDigits(s: string): string {
   return (s || '').replace(/[^0-9]/g, '');
 }
 
@@ -21,7 +21,22 @@ export async function GET(req: Request) {
 
     const token = process.env.DECOLECTA_API_TOKEN;
     if (!token) {
-      return NextResponse.json({ ok: false, error: 'DECOLECTA_API_TOKEN no configurado en entorno' }, { status: 500 });
+      const dniMocks: Record<string, { name: string; address: string }> = {
+        '12345678': { name: 'Juan Pérez', address: 'Av. Siempre Viva 123, Lima' },
+        '87654321': { name: 'María López', address: 'Jr. Las Flores 456, Arequipa' },
+      };
+      const rucMocks: Record<string, { businessName: string; address: string }> = {
+        '20123456789': { businessName: 'Industrias Ficticias S.A.C.', address: 'Calle Industria 789, Lima' },
+      };
+      if (doc.length <= 8) {
+        const data = dniMocks[doc] || { name: 'Cliente', address: 'Dirección no disponible' };
+        return NextResponse.json({ type: 'DNI', ...data });
+      }
+      if (doc.length === 11) {
+        const data = rucMocks[doc] || { businessName: 'Empresa', address: 'Dirección no disponible' };
+        return NextResponse.json({ type: 'RUC', ...data });
+      }
+      return NextResponse.json({ error: 'Documento no válido' }, { status: 400 });
     }
 
     const headers = {
@@ -47,7 +62,9 @@ export async function GET(req: Request) {
         type: 'DNI',
         name: fullName || 'Cliente',
         document: String(data?.document_number || doc),
-        address: undefined,
+        address: (data?.direccion ? String(data.direccion) : undefined),
+        civilStatus: (data?.estado_civil ? String(data.estado_civil) : undefined),
+        raw: data,
       });
     }
 
@@ -68,6 +85,11 @@ export async function GET(req: Request) {
         businessName: String(data?.razon_social || ''),
         document: String(data?.numero_documento || doc),
         address: String(data?.direccion || ''),
+        status: (data?.estado ? String(data.estado) : undefined),
+        condition: (data?.condicion ? String(data.condicion) : undefined),
+        activity: (data?.actividad_economica ? String(data.actividad_economica) : undefined),
+        legalRepresentatives: Array.isArray((data as any)?.representantes_legales) ? (data as any).representantes_legales : [],
+        raw: data,
       });
     }
 
@@ -75,36 +97,4 @@ export async function GET(req: Request) {
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || 'Error interno' }, { status: 500 });
   }
-}
-
-// Mock básico de autocompletado por DNI/RUC.
-// En producción, esta ruta debe consultar una base de datos o servicio externo (RENIEC/SUNAT).
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const doc = (searchParams.get('doc') || '').replace(/\D/g, '');
-
-  if (!doc) {
-    return NextResponse.json({ error: 'Documento requerido' }, { status: 400 });
-  }
-
-  // Respuestas simuladas
-  const dniMocks: Record<string, { name: string; address: string }> = {
-    '12345678': { name: 'Juan Pérez', address: 'Av. Siempre Viva 123, Lima' },
-    '87654321': { name: 'María López', address: 'Jr. Las Flores 456, Arequipa' },
-  };
-  const rucMocks: Record<string, { businessName: string; address: string }> = {
-    '20123456789': { businessName: 'Industrias Ficticias S.A.C.', address: 'Calle Industria 789, Lima' },
-  };
-
-  if (doc.length <= 8) {
-    const data = dniMocks[doc] || { name: 'Cliente', address: 'Dirección no disponible' };
-    return NextResponse.json({ type: 'DNI', ...data });
-  }
-
-  if (doc.length === 11) {
-    const data = rucMocks[doc] || { businessName: 'Empresa', address: 'Dirección no disponible' };
-    return NextResponse.json({ type: 'RUC', ...data });
-  }
-
-  return NextResponse.json({ error: 'Documento no válido' }, { status: 400 });
 }

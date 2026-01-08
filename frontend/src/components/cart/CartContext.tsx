@@ -6,6 +6,8 @@ export type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string;
+  thumbnailUrl?: string;
 };
 
 type CartContextType = {
@@ -28,11 +30,9 @@ function loadFromStorage(): CartItem[] {
   
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    console.log('🔍 loadFromStorage: Raw data:', stored);
     
     if (stored) {
       const parsed = JSON.parse(stored);
-      console.log('🔍 loadFromStorage: Parsed data:', parsed);
       
       const validItems = parsed.filter((item: any) => 
         item && 
@@ -43,37 +43,31 @@ function loadFromStorage(): CartItem[] {
         item.quantity > 0
       );
       
-      console.log('🔍 loadFromStorage: Valid items:', validItems);
       return validItems;
     }
   } catch (error) {
-    console.error('🔍 loadFromStorage: Error:', error);
+    // Silently handle localStorage errors
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error loading cart from localStorage:', error);
+    }
   }
   
   return [];
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  console.log('CartProvider: Component initialized');
-  
   // Inicializar con array vacío para evitar problemas de SSR
   const [items, setItems] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
-
-  console.log('🚀 CartProvider: Setting up useEffect');
   
   // Hidratar desde localStorage después del montaje
   useEffect(() => {
-    console.log('🔥 USEEFFECT: Starting hydration process');
     const storedItems = loadFromStorage();
-    console.log('🔥 USEEFFECT: Loaded items:', storedItems);
     setItems(storedItems);
     setIsHydrated(true);
-    console.log('🔥 USEEFFECT: Hydration completed');
   }, []);
 
   const addItem = (item: CartItem) => {
-    console.log('CartProvider: Adding item:', item);
     const existingIndex = items.findIndex(i => i.productId === item.productId);
     let newItems: CartItem[];
     
@@ -90,13 +84,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (isHydrated && typeof window !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
-        console.log('CartProvider: Saved to localStorage:', newItems);
       } catch (error) {
-        console.error('CartProvider: Error saving to localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error saving to localStorage:', error);
+        }
       }
     }
-    
-    console.log('CartProvider: New cart state after adding:', newItems);
   };
 
   const removeItem = (productId: number) => {
@@ -107,7 +100,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
       } catch (error) {
-        console.error('CartProvider: Error saving to localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error saving to localStorage:', error);
+        }
       }
     }
   };
@@ -127,7 +122,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
       } catch (error) {
-        console.error('CartProvider: Error saving to localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error saving to localStorage:', error);
+        }
       }
     }
   };
@@ -139,7 +136,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.removeItem(STORAGE_KEY);
       } catch (error) {
-        console.error('CartProvider: Error clearing localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error clearing localStorage:', error);
+        }
       }
     }
   };

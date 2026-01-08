@@ -1,4 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('contactos')
 export class Contacto {
@@ -26,4 +31,3 @@ export class Contacto {
   @CreateDateColumn()
   creadoEn!: Date;
 }
-

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
-import QuotesView from "@/components/QuotesView";
+import { apiFetchAuth, requireAuthOrRedirect } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 function computeTotal(o: { total?: any; items?: Array<{ price?: any; quantity?: any }> }) {
   const coerced = Number(o?.total);
@@ -38,19 +38,23 @@ type Quote = {
   customerEmail: string;
   customerPhone?: string;
   items: QuoteItem[];
-  status: "PENDIENTE" | "EN_PROCESO" | "ENVIADA" | "CERRADA" | "RECHAZADA";
+  status: "PENDIENTE" | "NUEVA" | "EN_PROCESO" | "ENVIADA" | "COMPLETADA" | "CERRADA" | "RECHAZADA" | string;
   notes?: string;
   createdAt: string | Date;
 };
 type Product = { id: number; name: string; price: number };
 
 function statusBadgeClass(status: Quote["status"]) {
-  switch (status) {
+  // Normalizar estado: 'NUEVA' del backend = 'PENDIENTE' en el frontend
+  const normalized = status === 'NUEVA' ? 'PENDIENTE' : status;
+  
+  switch (normalized) {
     case 'PENDIENTE':
       return { bg: 'bg-amber-50', border: 'border-amber-200' };
     case 'EN_PROCESO':
       return { bg: 'bg-blue-50', border: 'border-blue-200' };
     case 'ENVIADA':
+    case 'COMPLETADA':
       return { bg: 'bg-emerald-50', border: 'border-emerald-200' };
     case 'CERRADA':
       return { bg: 'bg-zinc-100', border: 'border-zinc-200' };
@@ -59,6 +63,20 @@ function statusBadgeClass(status: Quote["status"]) {
     default:
       return { bg: 'bg-zinc-100', border: 'border-zinc-200' };
   }
+}
+
+function formatStatus(status: Quote["status"]): string {
+  const normalized = status === 'NUEVA' ? 'PENDIENTE' : status === 'COMPLETADA' ? 'COMPLETADA' : status;
+  const statusMap: Record<string, string> = {
+    'PENDIENTE': 'Pendiente',
+    'EN_PROCESO': 'En Proceso',
+    'ENVIADA': 'Enviada',
+    'COMPLETADA': 'Completada',
+    'CERRADA': 'Cerrada',
+    'RECHAZADA': 'Rechazada',
+    'NUEVA': 'Nueva',
+  };
+  return statusMap[normalized] || status;
 }
 
 function printQuote(q: Quote, products: Product[]) {
@@ -125,188 +143,293 @@ function printQuote(q: Quote, products: Product[]) {
 }
 
 export default function MisPedidosPage() {
+  const { loading: authLoading, user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  const hasToken = isClient ? !!localStorage.getItem("token") : false;
-  // Nota: mostramos todas las cotizaciones en esta página, por lo que no necesitamos el email del perfil.
-
-  // Mis Cotizaciones
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [qLoading, setQLoading] = useState<boolean>(false);
-  const [qError, setQError] = useState<string | null>(null);
-  // Vista automática: ordenar y paginar para rendimiento
-  const [qSortBy, setQSortBy] = useState<"fecha"|"estado"|"total">("fecha");
-  const [qSortDir, setQSortDir] = useState<"asc"|"desc">("desc");
-  const [qPage, setQPage] = useState<number>(1);
-  const PAGE_SIZE = 20;
-  const [products, setProducts] = useState<Product[]>([]);
-  const pricesById = useMemo(() => {
-    const map: Record<number, number> = {};
-    for (const p of products) map[p.id] = Number(p.price) || 0;
-    return map;
-  }, [products]);
-
-  const quoteTotals = useMemo(() => {
-    const out: Record<number, number> = {};
-    for (const q of quotes) {
-      const total = (q.items ?? []).reduce((acc, it) => acc + (pricesById[it.productId] || 0) * (Number(it.quantity) || 0), 0);
-      out[q.id] = total;
-    }
-    return out;
-  }, [quotes, pricesById]);
-
-  const sortedQuotes = useMemo(() => {
-    const arr = [...quotes];
-    const order = ['PENDIENTE','EN_PROCESO','ENVIADA','CERRADA','RECHAZADA'];
-    arr.sort((a,b) => {
-      if (qSortBy === 'fecha') {
-        const da = new Date(a.createdAt).getTime();
-        const db = new Date(b.createdAt).getTime();
-        return qSortDir === 'asc' ? da - db : db - da;
-      } else if (qSortBy === 'estado') {
-        const ia = order.indexOf(a.status);
-        const ib = order.indexOf(b.status);
-        return qSortDir === 'asc' ? ia - ib : ib - ia;
-      } else {
-        const ta = quoteTotals[a.id] || 0;
-        const tb = quoteTotals[b.id] || 0;
-        return qSortDir === 'asc' ? ta - tb : tb - ta;
-      }
-    });
-    return arr;
-  }, [quotes, qSortBy, qSortDir, quoteTotals]);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(sortedQuotes.length / PAGE_SIZE)), [sortedQuotes]);
-  const pageQuotes = useMemo(() => sortedQuotes.slice((qPage - 1) * PAGE_SIZE, qPage * PAGE_SIZE), [sortedQuotes, qPage]);
-  useEffect(() => { setQPage(1); }, [qSortBy, qSortDir, quotes.length]);
 
   useEffect(() => {
-    setIsClient(true);
+    if (authLoading) return;
+    
+    const token = requireAuthOrRedirect();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     async function load() {
-      if (!hasToken) {
-        setLoading(false);
-        return;
-      }
       try {
-        const data = await apiFetch("/api/pedidos/mios", { method: "GET" });
-        setOrders(data);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/638fba18-ebc9-4dbf-9020-8d680af003ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'mis-pedidos/page.tsx:load',message:'loading data start',data:{},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        const [ordersData, quotesData, productsData] = await Promise.all([
+          apiFetchAuth("/pedidos/mios").catch((e) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/638fba18-ebc9-4dbf-9020-8d680af003ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'mis-pedidos/page.tsx:load',message:'pedidos/mios error',data:{error:e?.message},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
+            return [];
+          }),
+          apiFetchAuth("/cotizaciones/mias").catch((e) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/638fba18-ebc9-4dbf-9020-8d680af003ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'mis-pedidos/page.tsx:load',message:'cotizaciones/mias error',data:{error:e?.message,errorStr:String(e)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
+            return [];
+          }),
+          apiFetchAuth("/productos").catch(() => []),
+        ]);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/638fba18-ebc9-4dbf-9020-8d680af003ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'mis-pedidos/page.tsx:load',message:'data loaded',data:{ordersCount:Array.isArray(ordersData)?ordersData.length:'not-array',quotesCount:Array.isArray(quotesData)?quotesData.length:'not-array',productsCount:Array.isArray(productsData)?productsData.length:'not-array'},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+        setQuotes(Array.isArray(quotesData) ? quotesData : []);
+        setProducts(Array.isArray(productsData) ? productsData : []);
       } catch (e: any) {
-        setError(e?.message ?? "Error cargando pedidos");
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/638fba18-ebc9-4dbf-9020-8d680af003ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'mis-pedidos/page.tsx:load',message:'load error',data:{error:e?.message},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        setError(e?.message ?? "Error cargando datos");
       } finally {
         setLoading(false);
       }
     }
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasToken]);
+  }, [authLoading, user]);
 
-  // Ya no cargamos el email del perfil: en Mis pedidos mostraremos todas las cotizaciones.
-
-  // Cargar cotizaciones del usuario autenticado y productos para calcular totales
-  useEffect(() => {
-    async function loadQuotes() {
-      if (!hasToken) return;
-      setQLoading(true);
-      setQError(null);
-      try {
-        const profile = await apiFetch('/api/auth/profile');
-        const email = profile?.email?.toLowerCase();
-        const [allQuotes, prods] = await Promise.all([
-          apiFetch('/api/cotizaciones'),
-          apiFetch('/api/productos'),
-        ]);
-        setProducts(Array.isArray(prods) ? prods : []);
-        const mine = (Array.isArray(allQuotes) ? allQuotes : []).filter((q: Quote) => q.customerEmail?.toLowerCase() === email);
-        setQuotes(mine);
-      } catch (e: any) {
-        setQError(e?.message ?? 'Error cargando cotizaciones');
-      } finally {
-        setQLoading(false);
-      }
-    }
-    loadQuotes();
-  }, [hasToken]);
-
-  if (!isClient) {
+  if (authLoading || loading) {
     return (
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-semibold mb-6">Mis pedidos</h1>
-        <p>Cargando...</p>
+        <h1 className="text-2xl font-semibold mb-6">Mis pedidos y cotizaciones</h1>
+        <p className="text-zinc-600">Cargando...</p>
       </section>
     );
   }
 
-  if (!hasToken) {
+  if (!user) {
     return (
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-semibold mb-4">Mis pedidos</h1>
-        <p className="mb-4">Necesitas iniciar sesión para ver tus pedidos.</p>
+        <h1 className="text-2xl font-semibold mb-4">Mis pedidos y cotizaciones</h1>
+        <p className="mb-4 text-zinc-700">Necesitas iniciar sesión para ver tus pedidos y cotizaciones.</p>
         <div className="flex gap-3">
-          <Link href="/auth/login" className="px-4 py-2 bg-emerald-600 text-white rounded">Iniciar sesión</Link>
-          <Link href="/auth/register" className="px-4 py-2 border rounded">Registrarme</Link>
+          <Link href="/auth/login" className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
+            Iniciar sesión
+          </Link>
+          <Link href="/auth/register" className="px-4 py-2 border border-zinc-300 rounded hover:bg-zinc-50 transition-colors">
+            Registrarme
+          </Link>
         </div>
       </section>
     );
   }
+
+  // Calcular totales de cotizaciones
+  const pricesById: Record<number, number> = {};
+  products.forEach((p) => {
+    pricesById[p.id] = Number(p.price) || 0;
+  });
+
+  const quoteTotals: Record<number, number> = {};
+  quotes.forEach((q) => {
+    const total = (q.items ?? []).reduce(
+      (acc, it) => acc + (pricesById[it.productId] || 0) * (Number(it.quantity) || 0),
+      0
+    );
+    quoteTotals[q.id] = total;
+  });
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-semibold mb-6">Mis pedidos</h1>
-      <nav aria-label="Secciones" className="mb-6">
-        <ul className="flex gap-3 text-sm">
-          <li><a href="#pedidos" className="underline">Pedidos</a></li>
-          <li><a href="#cotizaciones" className="underline">Cotizaciones</a></li>
-        </ul>
-      </nav>
-      {loading && <p>Cargando pedidos...</p>}
-      {error && (
-        <div role="alert" className="mb-4 p-3 bg-red-50 text-red-700 border border-red-200 rounded">
-          {error}
-        </div>
-      )}
-      {!loading && !error && orders.length === 0 && (
-        <div className="mb-6">
-          <p className="mb-2">Aún no tienes pedidos.</p>
-          <Link href="/catalogo" className="text-emerald-700 hover:underline">Ir al catálogo</Link>
-        </div>
-      )}
-      <h2 id="pedidos" className="text-xl font-semibold mt-2 mb-3">Pedidos</h2>
-      <ul className="space-y-4">
-        {orders.map((o) => {
-          const date = new Date(o.createdAt);
-          return (
-            <li key={o.id} className="border rounded p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="text-sm text-zinc-600">Pedido #{o.id}</p>
-                  <p className="text-sm text-zinc-600">{date.toLocaleString()}</p>
-                </div>
-                <span className="px-2 py-1 text-xs rounded bg-zinc-100 border">{o.status}</span>
-              </div>
-              <div className="mb-2">
-                <p className="font-medium">Total: ${formatMoney(computeTotal(o))}</p>
-                {o.shippingAddress && (
-                  <p className="text-sm text-zinc-600">Envío: {o.shippingAddress}</p>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1">Productos</p>
-                <ul className="text-sm list-disc pl-5">
-                  {o.items.map((it, idx) => (
-                    <li key={`${o.id}-${it.productId}-${idx}`}>{it.name} × {it.quantity} — ${formatMoney(Number(it.price) || 0)}</li>
-                  ))}
-              </ul>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Mis pedidos y cotizaciones</h1>
+        <p className="text-zinc-600">Gestiona tus pedidos y solicitudes de cotización</p>
+      </div>
 
-      {/* Sección Mis Cotizaciones (componente compartido) */}
-      <h2 id="cotizaciones" className="text-xl font-semibold mt-10 mb-3">Mis cotizaciones</h2>
-      <QuotesView />
+      {error && (
+        <div role="alert" className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {/* Estadísticas rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="text-sm text-zinc-600 mb-1">Pedidos totales</div>
+          <div className="text-2xl font-bold text-emerald-600">{orders.length}</div>
+        </div>
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="text-sm text-zinc-600 mb-1">Cotizaciones activas</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {quotes.filter(q => q.status === 'NUEVA' || q.status === 'PENDIENTE' || q.status === 'EN_PROCESO').length}
+          </div>
+        </div>
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="text-sm text-zinc-600 mb-1">Cotizaciones totales</div>
+          <div className="text-2xl font-bold text-zinc-700">{quotes.length}</div>
+        </div>
+      </div>
+
+      {/* Sección de Cotizaciones */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold">Mis Cotizaciones</h2>
+          <Link 
+            href="/cotizacion" 
+            className="px-4 py-2 bg-black text-white rounded hover:bg-zinc-800 transition-colors text-sm"
+          >
+            Nueva cotización
+          </Link>
+        </div>
+
+        {quotes.length === 0 ? (
+          <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-8 text-center">
+            <p className="text-zinc-600 mb-4">Aún no has solicitado ninguna cotización.</p>
+            <Link href="/cotizacion" className="inline-block px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
+              Solicitar cotización
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quotes.map((q) => {
+              const date = new Date(q.createdAt);
+              const total = quoteTotals[q.id] || 0;
+              const badge = statusBadgeClass(q.status as any);
+              return (
+                <div key={q.id} className="bg-white border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold text-lg">Cotización #{q.id}</h3>
+                      <p className="text-sm text-zinc-500">{date.toLocaleDateString('es-PE', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded border ${badge.bg} ${badge.border}`}>
+                      {formatStatus(q.status)}
+                    </span>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-zinc-600 mb-1">Productos:</p>
+                    <p className="text-sm font-medium">
+                      {q.items?.length || 0} {q.items?.length === 1 ? 'producto' : 'productos'}
+                    </p>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-sm text-zinc-600 mb-1">Total estimado:</p>
+                    <p className="text-xl font-bold text-emerald-600">S/ {formatMoney(total)}</p>
+                  </div>
+
+                  {q.notes && (
+                    <div className="mb-4">
+                      <p className="text-xs text-zinc-500 line-clamp-2">{q.notes}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Link 
+                      href={`/cotizacion/${q.id}`}
+                      className="flex-1 text-center px-3 py-2 text-sm bg-zinc-100 hover:bg-zinc-200 rounded transition-colors"
+                    >
+                      Ver detalles
+                    </Link>
+                    <button
+                      onClick={() => printQuote(q, products)}
+                      className="px-3 py-2 text-sm border border-zinc-300 hover:bg-zinc-50 rounded transition-colors"
+                      title="Imprimir PDF"
+                    >
+                      PDF
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Sección de Pedidos */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold">Mis Pedidos</h2>
+          <Link 
+            href="/catalogo" 
+            className="px-4 py-2 border border-zinc-300 rounded hover:bg-zinc-50 transition-colors text-sm"
+          >
+            Ver catálogo
+          </Link>
+        </div>
+
+        {orders.length === 0 ? (
+          <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-8 text-center">
+            <p className="text-zinc-600 mb-4">Aún no has realizado ningún pedido.</p>
+            <Link href="/catalogo" className="inline-block px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
+              Ver catálogo
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((o) => {
+              const date = new Date(o.createdAt);
+              const statusColors: Record<string, { bg: string; text: string }> = {
+                PENDIENTE: { bg: 'bg-amber-100', text: 'text-amber-800' },
+                PAGADO: { bg: 'bg-blue-100', text: 'text-blue-800' },
+                ENVIADO: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+                CANCELADO: { bg: 'bg-red-100', text: 'text-red-800' },
+              };
+              const statusStyle = statusColors[o.status] || { bg: 'bg-zinc-100', text: 'text-zinc-800' };
+              
+              return (
+                <div key={o.id} className="bg-white border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Pedido #{o.id}</h3>
+                      <p className="text-sm text-zinc-500">
+                        {date.toLocaleDateString('es-PE', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 text-xs font-medium rounded ${statusStyle.bg} ${statusStyle.text}`}>
+                      {o.status}
+                    </span>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-sm text-zinc-600 mb-1">Total:</p>
+                    <p className="text-xl font-bold text-emerald-600">S/ {formatMoney(computeTotal(o))}</p>
+                  </div>
+
+                  {o.shippingAddress && (
+                    <div className="mb-4 p-3 bg-zinc-50 rounded">
+                      <p className="text-sm font-medium mb-1">Dirección de envío:</p>
+                      <p className="text-sm text-zinc-700">{o.shippingAddress}</p>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Productos ({o.items.length}):</p>
+                    <ul className="space-y-2">
+                      {o.items.map((it, idx) => (
+                        <li key={`${o.id}-${it.productId}-${idx}`} className="flex justify-between text-sm py-1 border-b border-zinc-100 last:border-0">
+                          <span>{it.name} × {it.quantity}</span>
+                          <span className="font-medium">S/ {formatMoney(Number(it.price) || 0)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

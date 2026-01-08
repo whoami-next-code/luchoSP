@@ -5,7 +5,7 @@ import axios from "axios";
 import { 
   CheckCircle, 
   Download, 
-  Print, 
+  Printer, 
   Share2, 
   ArrowLeft,
   Package,
@@ -23,7 +23,7 @@ import {
   QrCode
 } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
 
 interface OrderData {
   id: string;
@@ -109,9 +109,9 @@ export default function ConfirmacionPage() {
   const [error, setError] = useState<string | null>(null);
   const [downloadingReceipt, setDownloadingReceipt] = useState(false);
 
-  const paymentId = searchParams.get('paymentId');
-  const orderId = searchParams.get('orderId');
-  const method = searchParams.get('method') as 'card' | 'cash_on_delivery';
+  const paymentId = searchParams?.get('paymentId');
+  const orderId = searchParams?.get('orderId');
+  const method = (searchParams?.get('method') as 'card' | 'cash_on_delivery') ?? null;
 
   useEffect(() => {
     const fetchOrderData = async () => {
@@ -120,10 +120,10 @@ export default function ConfirmacionPage() {
         let params = {};
 
         if (paymentId && method === 'card') {
-          endpoint = '/api/pedidos/by-payment';
+          endpoint = '/pedidos/by-payment';
           params = { paymentId };
         } else if (orderId && method === 'cash_on_delivery') {
-          endpoint = '/api/pedidos/by-id';
+          endpoint = '/pedidos/by-order-id';
           params = { orderId };
         } else {
           throw new Error('Parámetros de confirmación inválidos');
@@ -139,7 +139,9 @@ export default function ConfirmacionPage() {
           throw new Error(response.data?.error || 'No se pudo obtener la información del pedido');
         }
       } catch (err: any) {
-        console.error('Error fetching order:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching order:', err);
+        }
         setError(err?.response?.data?.message || err?.message || 'Error cargando la confirmación');
       } finally {
         setLoading(false);
@@ -170,13 +172,15 @@ export default function ConfirmacionPage() {
         orderDate: new Date(order.createdAt)
       };
 
-      const response = await axios.post(`${API_BASE}/api/comprobantes/generar`, comprobanteData);
+      const response = await axios.post(`${API_BASE}/comprobantes/generar`, comprobanteData);
       
       if (response.data?.ok && response.data.comprobante) {
         setComprobante(response.data.comprobante);
       }
     } catch (error) {
-      console.error('Error generating comprobante:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error generating comprobante:', error);
+      }
     }
   };
 
@@ -185,7 +189,7 @@ export default function ConfirmacionPage() {
     
     setDownloadingReceipt(true);
     try {
-      const response = await axios.get(`${API_BASE}/api/comprobantes/${comprobante.id}/download`, {
+      const response = await axios.get(`${API_BASE}/comprobantes/${comprobante.id}/download`, {
         responseType: 'blob'
       });
       
@@ -199,7 +203,9 @@ export default function ConfirmacionPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error downloading receipt:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error downloading receipt:', err);
+      }
       alert('Error al descargar el comprobante. Inténtalo de nuevo.');
     } finally {
       setDownloadingReceipt(false);
@@ -219,7 +225,9 @@ export default function ConfirmacionPage() {
           url: window.location.href
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Error sharing:', err);
+        }
       }
     } else {
       // Fallback: copiar URL al clipboard
@@ -332,7 +340,7 @@ export default function ConfirmacionPage() {
                 onClick={handlePrintReceipt}
                 className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
               >
-                <Print className="h-4 w-4 mr-2" />
+                <Printer className="h-4 w-4 mr-2" />
                 Imprimir
               </button>
             </>

@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "email": "admin@industriasp.local",
+    "passwordHash": "$2b$10$NEG49KxPs3Rv9ufHE1CTweGeaDI.wKv3QWsSEXJvYsX63/Dd526F2",
+    "role": "ADMIN",
+    "fullName": "Administrador",
+    "verified": 0,
+    "resetToken": null,
+    "resetTokenExpires": null,
+    "verificationToken": null,
+    "createdAt": "2025-12-12T01:11:59.511Z",
+    "updatedAt": "2025-12-12T01:11:59.511Z"
+  }
+]

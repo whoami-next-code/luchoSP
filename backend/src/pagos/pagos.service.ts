@@ -5,11 +5,17 @@ import { obtenerDatosPorRUC, validarRUC } from '../common/utils/ruc';
 
 @Injectable()
 export class PagosService {
-  private stripe: Stripe;
+  private stripe?: Stripe;
 
   constructor() {
     const key = process.env.STRIPE_SECRET_KEY || '';
-    this.stripe = new Stripe(key, { apiVersion: '2024-09-30' as any });
+    if (key) {
+      this.stripe = new Stripe(key, { apiVersion: '2024-09-30' as any });
+    } else {
+      // Permitir que la aplicación arranque sin Stripe configurado (modo dev)
+      this.stripe = undefined;
+      console.warn('STRIPE_SECRET_KEY no configurado. Pagos deshabilitados.');
+    }
   }
 
   /**
@@ -18,6 +24,9 @@ export class PagosService {
    * - Calcula el monto total (en céntimos) a partir de los items.
    */
   async crearIntento(body: CrearIntentoDto) {
+    if (!this.stripe) {
+      return { ok: false, error: 'stripe_not_configured' };
+    }
     if (!validarRUC(body.ruc)) {
       return { ok: false, error: 'RUC inválido' };
     }
@@ -28,7 +37,10 @@ export class PagosService {
     }
 
     const amount = Math.round(
-      (body.items || []).reduce((s, it) => s + Number(it.precioUnitario) * Number(it.cantidad), 0) * 100
+      (body.items || []).reduce(
+        (s, it) => s + Number(it.precioUnitario) * Number(it.cantidad),
+        0,
+      ) * 100,
     );
 
     if (!amount || amount < 1) {
@@ -61,14 +73,22 @@ export class PagosService {
       paymentIntentId: pi.id,
     };
 
-    return { ok: true, clientSecret: pi.client_secret, paymentIntentId: pi.id, factura, datosRUC };
+    return {
+      ok: true,
+      clientSecret: pi.client_secret,
+      paymentIntentId: pi.id,
+      factura,
+      datosRUC,
+    };
   }
 
   async manejarWebhook(rawBody: Buffer, signature: string | undefined) {
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-    if (!endpointSecret) {
+    if (!endpointSecret || !this.stripe) {
       // Si no hay secreto configurado, aceptar el evento sin verificación (solo entorno dev)
-      console.warn('STRIPE_WEBHOOK_SECRET no configurado, omitiendo verificación');
+      console.warn(
+        'Stripe webhook sin verificación (secreto no configurado o Stripe deshabilitado)',
+      );
       try {
         const payload = JSON.parse(rawBody.toString('utf8'));
         return this._procesarEvento(payload);
@@ -79,7 +99,11 @@ export class PagosService {
 
     let event: Stripe.Event;
     try {
-      event = this.stripe.webhooks.constructEvent(rawBody, signature || '', endpointSecret);
+      event = this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature || '',
+        endpointSecret,
+      );
     } catch (err: any) {
       console.error('Error verificando webhook:', err?.message || err);
       return { ok: false, error: 'Firma de webhook inválida' };
@@ -101,4 +125,3 @@ export class PagosService {
     }
   }
 }
-

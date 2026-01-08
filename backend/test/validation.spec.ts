@@ -19,4 +19,3 @@ describe('isValidPrice', () => {
     expect(isValidPrice(10)).toBe(true);
   });
 });
-

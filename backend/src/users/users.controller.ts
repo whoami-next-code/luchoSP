@@ -1,26 +1,60 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserRole } from './user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Logger } from '@nestjs/common';
 
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly service: UsersService) {}
+  private readonly logger = new Logger('UsersController');
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  create(@Body() body: { email: string; password: string; role?: UserRole; fullName?: string }) {
+  create(
+    @Body()
+    body: {
+      email: string;
+      password: string;
+      role?: UserRole;
+      fullName?: string;
+    },
+  ) {
     return this.service.create(body);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query('role') role?: string, @Query('verified') verified?: string) {
+    const v =
+      typeof verified === 'string' ? /^(1|true)$/i.test(verified) : undefined;
+    const r =
+      role && role.toUpperCase() in UserRole
+        ? (role.toUpperCase() as keyof typeof UserRole)
+        : undefined;
+    const roleEnum = r ? UserRole[r] : undefined;
+    return this.service
+      .findAll({ role: roleEnum, verified: v })
+      .then((users) => {
+        this.logger.log(
+          `findAll users=${users.length} role=${roleEnum ?? 'ANY'} verified=${v ?? 'ANY'}`,
+        );
+        return users;
+      });
   }
 
   @Get(':id')
@@ -42,5 +76,19 @@ export class UsersController {
   @Roles('ADMIN')
   remove(@Param('id') id: string) {
     return this.service.remove(Number(id));
+  }
+
+  @Post('cleanup-unverified')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async cleanupUnverified(@Query('days') days: string) {
+    const d = days
+      ? Number(days)
+      : Number(process.env.UNVERIFIED_USER_GRACE_DAYS || 30);
+    const count = await this.service.removeUnverifiedOlderThan(d);
+    this.logger.log(
+      `Limpieza: eliminados ${count} usuarios no verificados más antiguos de ${d} días`,
+    );
+    return { deleted: count };
   }
 }

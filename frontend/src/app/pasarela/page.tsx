@@ -19,9 +19,10 @@ import {
   ShoppingCart
 } from "lucide-react";
 import DocumentInput from '@/components/DocumentInput';
+import OwnerAutocomplete from '@/components/OwnerAutocomplete';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || "");
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
 
 function validarRUC(ruc: string) {
   const clean = (ruc || '').replace(/[^0-9]/g, '');
@@ -88,6 +89,26 @@ function CheckoutForm() {
   const [phoneError, setPhoneError] = useState("");
   const [addressError, setAddressError] = useState("");
 
+  // Autocompletado: estado, carga, cache
+  const [autoLoading, setAutoLoading] = useState(false);
+  const [autoError, setAutoError] = useState<string | null>(null);
+  const [autoData, setAutoData] = useState<any | null>(null);
+  const cacheRef = React.useRef<Map<string, any>>(new Map());
+
+  const currentStep: 1 | 2 | 3 = success ? 3 : factura ? 2 : 1;
+  const stepCircleClass = (n: number) =>
+    `flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+      currentStep > n
+        ? 'bg-green-600 text-white'
+        : currentStep === n
+          ? 'bg-blue-600 text-white'
+          : 'bg-gray-300 text-gray-600'
+    }`;
+  const stepTextClass = (n: number) =>
+    currentStep >= n ? 'text-blue-700' : 'text-gray-500';
+  const stepBarClass = (from: number) =>
+    `w-16 h-0.5 ${currentStep > from ? 'bg-blue-600' : 'bg-gray-300'}`;
+
   // Recuperar datos del sessionStorage
   useEffect(() => {
     const orderSummary = sessionStorage.getItem("last_order_summary");
@@ -98,7 +119,9 @@ function CheckoutForm() {
           setShippingAddress(data.shippingAddress);
         }
       } catch (e) {
-        console.warn("Error parsing order summary:", e);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn("Error parsing order summary:", e);
+        }
       }
     }
   }, []);
@@ -163,6 +186,58 @@ function CheckoutForm() {
     return isDocumentValid && isNameValid && isPhoneValid && isAddressValid;
   };
 
+  // Debounced autocompletado desde API interna protegida
+  useEffect(() => {
+    const doc = documentType === 'dni' ? dni : ruc;
+    const cleanDoc = (doc || '').replace(/[^0-9]/g, '');
+    setAutoError(null);
+    setAutoData(null);
+    if (!documentValidation.isValid || !cleanDoc || (cleanDoc.length !== 8 && cleanDoc.length !== 11)) {
+      setAutoLoading(false);
+      return;
+    }
+    const cached = cacheRef.current.get(cleanDoc) || null;
+    if (cached) {
+      setAutoData(cached);
+      // Rellenar campos principales
+      if (cached.type === 'DNI') {
+        setCustomerName(cached.name || 'Cliente');
+        if (!shippingAddress && cached.address) setShippingAddress(cached.address);
+      } else if (cached.type === 'RUC') {
+        setCustomerName(cached.businessName || 'Empresa');
+        if (!shippingAddress && cached.address) setShippingAddress(cached.address);
+      }
+      return;
+    }
+    setAutoLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/clientes/autocomplete?doc=${encodeURIComponent(cleanDoc)}`);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || 'Error al consultar documento');
+        }
+        const data = await res.json();
+        cacheRef.current.set(cleanDoc, data);
+        try { sessionStorage.setItem(`doc_cache_${cleanDoc}`, JSON.stringify(data)); } catch {}
+        setAutoData(data);
+        if (data.type === 'DNI') {
+          setCustomerName(data.name || 'Cliente');
+          if (!shippingAddress && data.address) setShippingAddress(data.address);
+        } else if (data.type === 'RUC') {
+          setCustomerName(data.businessName || 'Empresa');
+          if (!shippingAddress && data.address) setShippingAddress(data.address);
+        }
+        setAutoError(null);
+      } catch (e: any) {
+        setAutoError(e?.message || 'No se pudo obtener datos');
+      } finally {
+        setAutoLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [documentType, dni, ruc, documentValidation.isValid, shippingAddress]);
+
   // Pago con tarjeta
   async function handleCardPayment(e: React.FormEvent) {
     e.preventDefault();
@@ -193,7 +268,7 @@ function CheckoutForm() {
     try {
       // 1) Crear intento de pago en backend
       const document = documentType === 'dni' ? dni : ruc;
-      const resp = await axios.post(`${API_BASE}/api/pagos/intento`, { 
+      const resp = await axios.post(`${API_BASE}/pagos/intento`, { 
         ruc: document, 
         items: itemsPayload,
         customerData: {
@@ -258,7 +333,7 @@ function CheckoutForm() {
     try {
       // Crear pedido con pago contra entrega
       const document = documentType === 'dni' ? dni : ruc;
-      const resp = await axios.post(`${API_BASE}/api/pedidos/contra-entrega`, {
+      const resp = await axios.post(`${API_BASE}/pedidos/contra-entrega`, {
         items: itemsPayload,
         customerData: {
           name: customerName,
@@ -334,24 +409,18 @@ function CheckoutForm() {
           {/* Indicadores de progreso */}
           <div className="flex items-center justify-center space-x-4 mb-6">
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-full text-sm font-medium">
-                ✓
-              </div>
-              <span className="ml-2 text-sm font-medium text-green-600">Carrito</span>
+              <div className={stepCircleClass(1)}>1</div>
+              <span className={`ml-2 text-sm font-medium ${stepTextClass(1)}`}>Datos</span>
             </div>
-            <div className="w-16 h-0.5 bg-blue-600"></div>
+            <div className={stepBarClass(1)}></div>
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-sm font-medium">
-                2
-              </div>
-              <span className="ml-2 text-sm font-medium text-blue-600">Pago</span>
+              <div className={stepCircleClass(2)}>2</div>
+              <span className={`ml-2 text-sm font-medium ${stepTextClass(2)}`}>Pago</span>
             </div>
-            <div className="w-16 h-0.5 bg-gray-300"></div>
+            <div className={stepBarClass(2)}></div>
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-500 rounded-full text-sm font-medium">
-                3
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-500">Confirmación</span>
+              <div className={stepCircleClass(3)}>3</div>
+              <span className={`ml-2 text-sm font-medium ${stepTextClass(3)}`}>Confirmación</span>
             </div>
           </div>
         </div>
@@ -490,30 +559,77 @@ function CheckoutForm() {
                   {documentError && (
                     <p className="mt-1 text-sm text-red-600">{documentError}</p>
                   )}
+                  {/* Estado de autocompletado */}
+                  <div className="mt-2 text-sm flex items-center gap-2">
+                    {autoLoading && (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        <span className="text-gray-600">Consultando registros…</span>
+                      </>
+                    )}
+                    {!autoLoading && autoError && (
+                      <>
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <span className="text-red-600">{autoError}</span>
+                      </>
+                    )}
+                    {!autoLoading && autoData && (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-green-700">Datos encontrados</span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {/* Nombre completo */}
+                {/* Nombre / Razón Social (autocompletado inteligente) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre Completo *
+                    {documentType === 'dni' ? 'Nombres completos *' : 'Razón social *'}
                   </label>
-                  <input
-                    type="text"
+                  <OwnerAutocomplete
+                    documentType={documentType}
+                    documentNumber={documentType === 'dni' ? dni : ruc}
                     value={customerName}
-                    onChange={(e) => {
-                      setCustomerName(e.target.value);
+                    onChange={(v) => {
+                      setCustomerName(v);
                       if (nameError) validateName();
                     }}
-                    className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      nameError ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Juan Pérez García"
-                    required
+                    onSelect={(owner) => {
+                      setCustomerName(owner.name || '');
+                      if (owner.address && !shippingAddress) setShippingAddress(owner.address);
+                      if (owner.phone && !customerPhone) setCustomerPhone(owner.phone);
+                      // Revalidar
+                      validateName();
+                    }}
+                    placeholder={documentType === 'dni' ? 'Juan Pérez García' : 'Industrias S.A.C.'}
                   />
                   {nameError && (
                     <p className="mt-1 text-sm text-red-600">{nameError}</p>
                   )}
                 </div>
+
+                {/* Información autocompletada de solo lectura (solo RUC) */}
+                {autoData?.type === 'RUC' && (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Dirección fiscal</label>
+                      <input readOnly value={autoData.address || ''} className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 border-gray-200" placeholder="No disponible" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Estado del contribuyente</label>
+                      <input readOnly value={autoData.status || ''} className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 border-gray-200" placeholder="No disponible" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Actividad económica</label>
+                      <input readOnly value={autoData.activity || ''} className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 border-gray-200" placeholder="No disponible" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Representantes legales</label>
+                      <textarea readOnly value={(autoData.legalRepresentatives || []).map((r: any) => r?.nombre || r).join('\n')} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 border-gray-200" placeholder="No disponible" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Teléfono */}
                 <div>

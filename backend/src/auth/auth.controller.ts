@@ -1,16 +1,56 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Req,
+  Query,
+  Headers,
+  Put,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { SupabaseAuthGuard } from './supabase-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/user.entity';
+import { Logger } from '@nestjs/common';
+import { MailService } from '../mail/mail.service';
+import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot.dto';
+import { ResetPasswordDto } from './dto/reset.dto';
+import { CheckEmailDto } from './dto/check-email.dto';
+import { createClient } from '@supabase/supabase-js';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService, private readonly users: UsersService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly users: UsersService,
+    private readonly mail: MailService,
+  ) {}
+  private readonly logger = new Logger('AuthController');
 
   @Post('register')
-  register(@Body() body: { email: string; password: string; fullName?: string }) {
-    return this.auth.register(body);
+  async register(@Body() body: RegisterDto, @Req() req: any) {
+    return this.auth.register({
+      email: body.email,
+      password: body.password,
+      fullName: body.fullName,
+      phone: body.phone,
+    });
+  }
+
+  @Post('register-custom')
+  async registerCustom(@Body() body: RegisterDto) {
+    return this.auth.registerWithSupabase({
+      email: body.email,
+      password: body.password,
+      fullName: body.fullName,
+      phone: body.phone,
+    });
   }
 
   @Post('login')
@@ -19,27 +59,61 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseAuthGuard)
   profile(@Req() req: any) {
     return req.user;
   }
 
+  @Put('profile')
+  @UseGuards(SupabaseAuthGuard)
+  async updateProfile(
+    @Req() req: any,
+    @Body()
+    body: {
+      fullName?: string;
+      phone?: string;
+      preferences?: Record<string, any>;
+    },
+  ) {
+    const email = req.user?.email;
+    if (!email) throw new BadRequestException('Usuario inválido');
+    const user = await this.users.findByEmail(email);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return this.users.update(user.id, {
+      fullName: body.fullName ?? user.fullName,
+      phone: body.phone ?? user.phone,
+    });
+  }
+
   // Recuperación de contraseña
   @Post('forgot-password')
-  async forgot(@Body() body: { email: string }) {
+  async forgot(@Body() body: ForgotPasswordDto, @Req() req: any) {
     return this.auth.forgotPassword(body.email);
   }
 
   @Post('reset-password')
-  async reset(@Body() body: { token: string; newPassword: string }) {
+  async reset(@Body() body: ResetPasswordDto) {
     return this.auth.resetPassword(body.token, body.newPassword);
   }
 
-  // Verificación de email
+  /*
+  // Verificación de email - DEPRECATED: Supabase maneja esto
   @Post('send-verification')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseAuthGuard)
   async sendVerification(@Req() req: any) {
-    return this.auth.sendVerification(req.user.userId);
+    // return this.auth.sendVerification(req.user.userId);
+    return { message: 'Use Supabase Auth flow' };
+  }
+  */
+
+  @Post('verify')
+  async verifyPost(@Body('token') token: string) {
+    return this.auth.verifyEmail(token);
+  }
+
+  @Post('resend-verification')
+  async resendVerification(@Body('email') email: string) {
+    return this.auth.resendVerificationByEmail(email);
   }
 
   @Get('verify')
@@ -47,17 +121,209 @@ export class AuthController {
     return this.auth.verifyEmail(token);
   }
 
+  @Post('check-email')
+  async checkEmail(@Body() body: CheckEmailDto) {
+    const existing = await this.users.findByEmail(body.email);
+    return {
+      exists: !!existing,
+      verified: !!existing?.verified,
+    };
+  }
+
+  @Get('fix-emails')
+  async fixEmails() {
+    return this.users.fixEmails();
+  }
+
+  @Post('register-external')
+  async registerExternal(
+    @Headers('x-external-secret') secret: string,
+    @Body() body: { email: string; fullName?: string; id?: string },
+  ) {
+    const expected = process.env.EXTERNAL_REG_SECRET || '';
+    const isDev = process.env.NODE_ENV !== 'production';
+    if (!expected && isDev) {
+      // Permitir en entorno de desarrollo si no hay secreto configurado
+      this.logger.warn('register-external permitido sin secreto en desarrollo');
+    } else if (secret !== expected) {
+      this.logger.warn(
+        `register-external unauthorized for email=${body?.email}`,
+      );
+      return { ok: false, error: 'unauthorized' };
+    }
+    const existing = await this.users.findByEmail(body.email);
+    if (existing) {
+      await this.users.update(existing.id, {
+        fullName: body.fullName,
+        verified: true,
+        supabaseUid: body.id,
+      } as any);
+      this.logger.log(
+        `register-external updated id=${existing.id} email=${body.email}`,
+      );
+      return { ok: true, created: false, id: existing.id };
+    }
+    const created = await this.users.create({
+      email: body.email,
+      fullName: body.fullName,
+      role: UserRole.CLIENTE,
+      verified: false, // Marcar como no verificado inicialmente, Supabase manejará la verificación
+      supabaseUid: body.id,
+    });
+    const emailDomain = (body.email.split('@')[1] || '').toLowerCase();
+
+    // Enviar correo de bienvenida y verificación para nuevos usuarios
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    try {
+      // Intentar generar link de verificación desde Supabase
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+
+      if (supabaseUrl && serviceKey) {
+        const supabase = createClient(supabaseUrl, serviceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        });
+
+        try {
+          // Usar magiclink en lugar de signup porque no tenemos la contraseña
+          // El usuario ya se registró desde el frontend, Supabase ya envió su correo de verificación
+          // Aquí enviamos un correo de bienvenida adicional
+          const { data: linkData } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email: body.email,
+            options: {
+              redirectTo: `${process.env.WEB_URL || 'http://localhost:3000'}/auth/login`,
+            },
+          });
+
+          const url = linkData?.properties?.action_link;
+          if (url) {
+            const mailResult = await this.mail.sendVerification({
+              to: created.email,
+              fullName: created.fullName ?? 'Usuario',
+              url,
+            });
+            if (mailResult?.ok) {
+              emailSent = true;
+              this.logger.log(
+                `Correo de verificación enviado a ${created.email}`,
+              );
+            } else {
+              emailError =
+                mailResult?.error || 'Error al enviar correo de verificación';
+              this.logger.warn(
+                `Error enviando correo de verificación: ${emailError}`,
+              );
+            }
+          } else {
+            // Fallback a correo de bienvenida
+            const mailResult = await this.mail.sendAccountCreation({
+              to: created.email,
+              fullName: created.fullName ?? 'Usuario',
+            });
+            if (mailResult?.ok) {
+              emailSent = true;
+              this.logger.log(
+                `Correo de bienvenida enviado a ${created.email}`,
+              );
+            } else {
+              emailError =
+                mailResult?.error || 'Error al enviar correo de bienvenida';
+              this.logger.warn(
+                `Error enviando correo de bienvenida: ${emailError}`,
+              );
+            }
+          }
+        } catch (linkError: any) {
+          this.logger.warn(
+            `Error generando link de verificación: ${linkError.message}`,
+          );
+          // Fallback a correo de bienvenida
+          try {
+            const mailResult = await this.mail.sendAccountCreation({
+              to: created.email,
+              fullName: created.fullName ?? 'Usuario',
+            });
+            if (mailResult?.ok) {
+              emailSent = true;
+              this.logger.log(
+                `Correo de bienvenida enviado a ${created.email} (fallback)`,
+              );
+            } else {
+              emailError =
+                mailResult?.error || 'Error al enviar correo de bienvenida';
+              this.logger.warn(
+                `Error enviando correo de bienvenida (fallback): ${emailError}`,
+              );
+            }
+          } catch (mailErr: any) {
+            emailError =
+              mailErr?.message || 'Error al enviar correo de bienvenida';
+            this.logger.error(
+              `Error enviando correo de bienvenida (fallback): ${emailError}`,
+            );
+          }
+        }
+      } else {
+        // Si no hay configuración de Supabase, solo enviar bienvenida
+        try {
+          const mailResult = await this.mail.sendAccountCreation({
+            to: created.email,
+            fullName: created.fullName ?? 'Usuario',
+          });
+          if (mailResult?.ok) {
+            emailSent = true;
+            this.logger.log(`Correo de bienvenida enviado a ${created.email}`);
+          } else {
+            emailError =
+              mailResult?.error || 'Error al enviar correo de bienvenida';
+            this.logger.warn(
+              `Error enviando correo de bienvenida: ${emailError}`,
+            );
+          }
+        } catch (mailErr: any) {
+          emailError =
+            mailErr?.message || 'Error al enviar correo de bienvenida';
+          this.logger.error(
+            `Error enviando correo de bienvenida: ${emailError}`,
+          );
+        }
+      }
+    } catch (error: any) {
+      emailError =
+        error?.message || 'Error al enviar correo electrónico de confirmación';
+      this.logger.error(`Error enviando correo: ${emailError}`);
+      // No fallar el registro si el correo falla
+    }
+
+    this.logger.log(
+      `register-external created id=${created.id} email=${body.email} emailSent=${emailSent}`,
+    );
+    return {
+      ok: true,
+      created: true,
+      id: created.id,
+      emailSent,
+      emailError: emailError || undefined,
+    };
+  }
+
   // Desarrollo: endpoint para forzar la creación del usuario admin si no existe
   @Post('dev-seed-admin')
   async devSeedAdmin() {
-    const email = process.env.ADMIN_EMAIL ?? 'admin@industriasp.local';
-    const password = process.env.ADMIN_PASSWORD ?? 'admin123';
-    const existing = await this.users.findByEmail(email);
-    if (!existing) {
-      await this.users.create({ email, password, role: UserRole.ADMIN, fullName: 'Administrador' });
-      return { seeded: true, email };
-    }
-    return { seeded: false, email };
+    // ESTE MÉTODO SOLO DEBE USARSE SI EL USUARIO YA EXISTE EN SUPABASE
+    // O SI TENEMOS LA SERVICE ROLE KEY (que no tenemos configurada).
+    // Por ahora, solo devolverá instrucciones.
+    return {
+      message:
+        'Por favor, regístrese como admin desde el Frontend. El sistema sincronizará automáticamente.',
+      action: 'Go to /auth/register',
+    };
   }
 
   // Desarrollo: restablecer contraseña del admin según ADMIN_PASSWORD

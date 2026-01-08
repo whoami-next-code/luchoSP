@@ -18,7 +18,12 @@ export class AppService implements OnApplicationBootstrap {
     const password = process.env.ADMIN_PASSWORD ?? 'admin123';
     const existing = await this.users.findByEmail(email);
     if (!existing) {
-      await this.users.create({ email, password, role: UserRole.ADMIN, fullName: 'Administrador' });
+      await this.users.create({
+        email,
+        password,
+        role: UserRole.ADMIN,
+        fullName: 'Administrador',
+      });
       this.logger.log(`Usuario admin creado: ${email}`);
     } else {
       this.logger.log(`Usuario admin existente: ${email}`);

@@ -14,7 +14,8 @@ export class ComprasService {
       numero: `BOL-${Date.now()}`,
       cliente: {
         dni: dto.dni,
-        nombre: `${datos.nombres} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`.trim(),
+        nombre:
+          `${datos.nombres} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`.trim(),
       },
       producto: dto.producto,
       cantidad: Number(dto.cantidad),
@@ -50,7 +51,8 @@ export class ComprasService {
       numero: `BOL-${Date.now()}`,
       cliente: {
         dni: dto.dni,
-        nombre: `${datos.nombres} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`.trim(),
+        nombre:
+          `${datos.nombres} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`.trim(),
       },
       items,
       total,

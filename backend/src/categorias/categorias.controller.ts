@@ -1,10 +1,23 @@
-import { BadRequestException, Body, Controller, Get, Post, UploadedFile, UseInterceptors, Param, Put, Delete } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  Param,
+  Put,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import * as fs from 'fs';
 import sharp from 'sharp';
 import { CategoriasService } from './categorias.service';
 import { isValidPrice } from '../common/validation';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('api/categorias')
 export class CategoriasController {
@@ -25,22 +38,38 @@ export class CategoriasController {
 
     let imageUrl: string | undefined = undefined;
     if (file) {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+      const uploadsDir = path.join(
+        process.cwd(),
+        'public',
+        'uploads',
+        'categories',
+      );
       await fs.promises.mkdir(uploadsDir, { recursive: true });
       const filename = `cat_${Date.now()}.webp`;
       const filepath = path.join(uploadsDir, filename);
       // Redimensiona a un ancho máximo de 800px
-      await sharp(file.buffer).resize({ width: 800 }).webp({ quality: 85 }).toFile(filepath);
+      await sharp(file.buffer)
+        .resize({ width: 800 })
+        .webp({ quality: 85 })
+        .toFile(filepath);
       imageUrl = `/uploads/categories/${filename}`;
     }
 
-    const categoria = await this.service.create({ name: String(name).trim(), description, imageUrl });
+    const categoria = await this.service.create({
+      name: String(name).trim(),
+      description,
+      imageUrl,
+    });
     return categoria;
   }
 
   @Put(':id')
   @UseInterceptors(FileInterceptor('image'))
-  async update(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Body() body: any) {
+  async update(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: any,
+  ) {
     const { name, description } = body;
     if (name && String(name).trim().length === 0) {
       throw new BadRequestException('El nombre no puede estar vacío');
@@ -48,11 +77,19 @@ export class CategoriasController {
 
     let imageUrl: string | undefined = undefined;
     if (file) {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+      const uploadsDir = path.join(
+        process.cwd(),
+        'public',
+        'uploads',
+        'categories',
+      );
       await fs.promises.mkdir(uploadsDir, { recursive: true });
       const filename = `cat_${Date.now()}.webp`;
       const filepath = path.join(uploadsDir, filename);
-      await sharp(file.buffer).resize({ width: 800 }).webp({ quality: 85 }).toFile(filepath);
+      await sharp(file.buffer)
+        .resize({ width: 800 })
+        .webp({ quality: 85 })
+        .toFile(filepath);
       imageUrl = `/uploads/categories/${filename}`;
     }
 
@@ -65,6 +102,7 @@ export class CategoriasController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: string) {
     return this.service.remove(Number(id));
   }

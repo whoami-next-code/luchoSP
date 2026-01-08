@@ -12,7 +12,8 @@ export default function ReportesPage() {
   const cargar = async () => {
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/reportes/muestreo");
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+      const res = await fetch(`${API_BASE}/reportes/muestreo`);
       const data = await res.json();
       setPuntos(data.puntos || []);
     } catch (err: any) {
@@ -41,7 +42,8 @@ export default function ReportesPage() {
     setGuardando(true);
     setExito(null);
     try {
-      const res = await fetch("http://localhost:3001/api/reportes/guardar", {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+      const res = await fetch(`${API_BASE}/reportes/guardar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: "Reporte de muestreo", datos: { puntos } }),

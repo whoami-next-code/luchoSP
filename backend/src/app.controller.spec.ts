@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersService } from './users/users.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -8,7 +9,20 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        AppService,
+        {
+          provide: UsersService,
+          useValue: {
+            findByEmail: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockResolvedValue({
+              id: 1,
+              email: 'admin@industriasp.local',
+              fullName: 'Administrador',
+            }),
+          },
+        },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);

@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'ADMIN',
@@ -14,7 +20,10 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ type: 'uuid', unique: true, nullable: true })
+  supabaseUid?: string;
+
+  @Column({ nullable: true })
   passwordHash: string;
 
   @Column({ type: 'varchar', default: UserRole.CLIENTE })
@@ -23,13 +32,22 @@ export class User {
   @Column({ nullable: true })
   fullName?: string;
 
+  @Column({ nullable: true })
+  phone?: string;
+
+  @Column({ nullable: true })
+  document?: string;
+
+  @Column({ nullable: true })
+  address?: string;
+
   @Column({ type: 'boolean', default: false })
   verified: boolean;
 
   @Column({ nullable: true })
   resetToken?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   resetTokenExpires?: Date;
 
   @Column({ nullable: true })
@@ -41,4 +59,3 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

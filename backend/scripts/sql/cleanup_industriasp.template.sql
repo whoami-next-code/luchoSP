@@ -1,0 +1,12 @@
+SET FOREIGN_KEY_CHECKS=0;
+-- ADMIN_EMAIL={{ADMIN_EMAIL}}
+-- ADMIN_ID={{ADMIN_ID}}
+DELETE FROM `orders` WHERE `userId` IS NULL OR `userId` <> {{ADMIN_ID}};
+DELETE FROM `quotes`;
+DELETE FROM `contactos`;
+DELETE FROM `reportes`;
+DELETE FROM `products`;
+DELETE FROM `categorias`;
+DELETE FROM `users` WHERE `id` <> {{ADMIN_ID}};
+SET FOREIGN_KEY_CHECKS=1;
+

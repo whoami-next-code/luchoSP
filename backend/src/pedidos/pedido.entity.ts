@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('orders')
 export class Pedido {
@@ -49,7 +55,13 @@ export class Pedido {
 
   // Estado del pedido
   @Column({ default: 'PENDING' })
-  orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  orderStatus:
+    | 'PENDING'
+    | 'CONFIRMED'
+    | 'PROCESSING'
+    | 'SHIPPED'
+    | 'DELIVERED'
+    | 'CANCELLED';
 
   // Dirección de envío
   @Column({ type: 'text' })
@@ -69,4 +81,3 @@ export class Pedido {
   @Column({ default: 'PENDIENTE' })
   status: 'PENDIENTE' | 'PAGADO' | 'ENVIADO' | 'CANCELADO';
 }
-

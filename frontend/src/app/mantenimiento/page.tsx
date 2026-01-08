@@ -17,7 +17,8 @@ export default function Mantenimiento() {
       notes: `MANTENIMIENTO | Equipo: ${String(form.get('equipo') || '')} | Detalle: ${String(form.get('desc') || '')}`,
     };
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/api/cotizaciones`, {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+      const res = await fetch(`${API_BASE}/cotizaciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

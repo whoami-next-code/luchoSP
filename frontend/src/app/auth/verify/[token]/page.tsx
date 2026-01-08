@@ -17,12 +17,23 @@ export default function VerifyEmailTokenPage() {
       setMessage(null);
       setError(null);
       try {
-        await apiFetch('/api/auth/verify', {
+        const response = await apiFetch<any>('/auth/verify', {
           method: 'POST',
           body: JSON.stringify({ token })
         });
-        setMessage('Tu email ha sido verificado correctamente.');
-        setTimeout(() => router.push('/perfil'), 1200);
+        
+        if (response.access_token) {
+          localStorage.setItem('token', response.access_token);
+          if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
+          // Disparar evento de almacenamiento para actualizar otros componentes si es necesario
+          window.dispatchEvent(new Event('storage'));
+        }
+
+        setMessage('Tu email ha sido verificado. Iniciando sesión...');
+        // Redirección inmediata a home
+        setTimeout(() => router.push('/'), 1000);
       } catch (err: any) {
         setError('El enlace de verificación no es válido o ha expirado.');
       } finally {

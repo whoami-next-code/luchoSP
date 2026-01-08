@@ -1,6 +1,20 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
 import { isValidPrice } from '../common/validation';
 import { ProductosService } from './productos.service';
+import { EventsService } from '../realtime/events.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -12,16 +26,23 @@ import sharp from 'sharp';
 
 @Controller('api/productos')
 export class ProductosController {
-  constructor(private readonly productosService: ProductosService) {}
+  constructor(
+    private readonly productosService: ProductosService,
+    private readonly events: EventsService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN','VENDEDOR')
-  @UseInterceptors(FileInterceptor('image', { storage: multer.memoryStorage() }))
+  @Roles('ADMIN', 'VENDEDOR')
+  @UseInterceptors(
+    FileInterceptor('image', { storage: multer.memoryStorage() }),
+  )
   async create(@UploadedFile() file: Express.Multer.File, @Body() body: any) {
     // Validación de precio (mínimo 0.01)
     if (body.price === undefined || !isValidPrice(body.price)) {
-      throw new BadRequestException('El precio debe ser un número positivo (mínimo 0.01)');
+      throw new BadRequestException(
+        'El precio debe ser un número positivo (mínimo 0.01)',
+      );
     }
     // If no file provided, fallback to simple create
     let imageUrl: string | undefined;
@@ -29,22 +50,31 @@ export class ProductosController {
 
     if (file) {
       // Validate mime type
-      const allowed = ['image/jpeg','image/png','image/webp'];
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowed.includes(file.mimetype)) {
-        throw new BadRequestException('Formato no permitido. Use JPG, PNG o WEBP.');
+        throw new BadRequestException(
+          'Formato no permitido. Use JPG, PNG o WEBP.',
+        );
       }
+
+      /* 
       // Validate size <= 5MB
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        throw new BadRequestException('La imagen supera el tamaño máximo de 5MB.');
+        throw new BadRequestException(
+          'La imagen supera el tamaño máximo de 5MB.',
+        );
       }
       // Validate dimensions >= 400x300 (relajado)
       const meta = await sharp(file.buffer).metadata();
       const w = meta.width ?? 0;
       const h = meta.height ?? 0;
       if (w < 400 || h < 300) {
-        throw new BadRequestException('La imagen debe tener mínimamente 400x300px.');
+        throw new BadRequestException(
+          'La imagen debe tener mínimamente 400x300px.',
+        );
       }
+      */
 
       // Ensure directories exist
       const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products');
@@ -53,8 +83,13 @@ export class ProductosController {
       fs.mkdirSync(thumbsDir, { recursive: true });
 
       // Generate filename
-      const ext = file.mimetype === 'image/png' ? 'png' : file.mimetype === 'image/webp' ? 'webp' : 'jpg';
-      const base = `p_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+      const ext =
+        file.mimetype === 'image/png'
+          ? 'png'
+          : file.mimetype === 'image/webp'
+            ? 'webp'
+            : 'jpg';
+      const base = `p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const filename = `${base}.${ext}`;
 
       // Optimize main image (max width 1600)
@@ -68,7 +103,9 @@ export class ProductosController {
 
       // Thumbnail (width 400)
       const thumbOutput = join(thumbsDir, filename);
-      let thumbPipe = sharp(file.buffer).rotate().resize({ width: 400, withoutEnlargement: true });
+      let thumbPipe = sharp(file.buffer)
+        .rotate()
+        .resize({ width: 400, withoutEnlargement: true });
       if (ext === 'jpg') thumbPipe = thumbPipe.jpeg({ quality: 80 });
       else if (ext === 'png') thumbPipe = thumbPipe.png({ quality: 80 });
       else thumbPipe = thumbPipe.webp({ quality: 80 });
@@ -78,7 +115,7 @@ export class ProductosController {
       thumbnailUrl = `/uploads/products/thumbs/${filename}`;
     }
 
-    return this.productosService.create({
+    const created = await this.productosService.create({
       name: body.name,
       description: body.description,
       price: Number(body.price ?? 0),
@@ -87,6 +124,8 @@ export class ProductosController {
       imageUrl,
       thumbnailUrl,
     });
+    this.events.productosUpdated({ id: created.id, action: 'create' });
+    return created;
   }
 
   @Get()
@@ -101,18 +140,26 @@ export class ProductosController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN','VENDEDOR')
+  @Roles('ADMIN', 'VENDEDOR')
   update(@Param('id') id: string, @Body() body: any) {
     if (body.price !== undefined && !isValidPrice(body.price)) {
-      throw new BadRequestException('El precio debe ser un número positivo (mínimo 0.01)');
+      throw new BadRequestException(
+        'El precio debe ser un número positivo (mínimo 0.01)',
+      );
     }
-    return this.productosService.update(Number(id), body);
+    return this.productosService.update(Number(id), body).then((p) => {
+      this.events.productosUpdated({ id: Number(id), action: 'update' });
+      return p;
+    });
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   remove(@Param('id') id: string) {
-    return this.productosService.remove(Number(id));
+    return this.productosService.remove(Number(id)).then(() => {
+      this.events.productosUpdated({ id: Number(id), action: 'delete' });
+      return { ok: true };
+    });
   }
 }

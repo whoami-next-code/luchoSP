@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Renoxa Opencart</title>
+
+        <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+
+        <!--google material-->
+        <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&amp;subset=devanagari,latin-ext" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Raleway:400,600,800" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="js/flexcrollstyles.css">
+        <link rel="stylesheet" type="text/css" href="js/tutorsty.css">
+
+        <!--bootstrap-->
+        <link href="javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen" />
+        <link href="javascript/font-awesome/css/font-awesome.min.css" rel="stylesheet" media="screen" />
+        <script type="text/javascript" src="javascript/bootstrap/js/bootstrap.min.js"></script>
+        <!--custom-->
+        <link rel="stylesheet" href="css/style.css">
+        <script type="text/javascript">
+            function headermenu() {
+                if (jQuery(this).scrollTop() > 1000) {
+                    jQuery('header').addClass("fixed");
+                    jQuery('ul.docs-nav').addClass("fixed");
+                    jQuery('footer').addClass("fixed");
+                } else
+                {
+                    jQuery('header').removeClass("fixed");
+                    jQuery('ul.docs-nav').removeClass("fixed");
+                    jQuery('footer').removeClass("fixed");
+                }
+                if (jQuery('ul.docs-nav li ul.installation li a').hasClass("active")) {
+                    jQuery('ul.docs-nav li ul.installation').addClass("in");
+                    jQuery('ul.docs-nav li ul.common-modules').removeClass("in");
+                    jQuery('ul.docs-nav li ul.layouts').removeClass("in");
+                } else if (jQuery('ul.docs-nav li ul.common-modules li a').hasClass("active")) {
+                    jQuery('ul.docs-nav li ul.common-modules').addClass("in");
+                    jQuery('ul.docs-nav li ul.installtion').removeClass("in");
+                    jQuery('ul.docs-nav li ul.layouts').removeClass("in");
+                } else if (jQuery('ul.docs-nav li ul.layouts li a').hasClass("active")) {
+                    jQuery('ul.docs-nav li ul.layouts').addClass("in");
+                    jQuery('ul.docs-nav li ul.installtion').removeClass("in");
+                    jQuery('ul.docs-nav li ul.common-modules').removeClass("in");
+                } else {
+                    jQuery('ul.docs-nav li ul.collapse').removeClass("in");
+                }
+            }
+            $(document).ready(function () {
+                headermenu();
+            });
+            jQuery(window).resize(function () {
+                headermenu();
+            });
+            jQuery(window).scroll(function () {
+                headermenu();
+            });
+        </script>
+
+        <script src="js/layout.js"></script>
+        <script src="js/flexcroll.js"></script>
+
+
+    </head>
+    <body>
+        <div>
+            <div class="container-fluid">
+                <div class="row">
+
+                    <div class="bcg"
+                         data-center="background-position: 50% 10px;"
+                         data-top-bottom="background-position: 50% -200px;"
+                         data-bottom-top="background-position: 50% 200px;"
+                         >
+                        <div class="parellax-content">
+                            <h1>WELCOME TO RENOXA THEME</h1>
+                            <h3>RESPONSIVE OPENCART THEME</h3>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <header>
+                <div class="container-fluid">
+                    <div class="row"><div class="col-sm-12 top"></div></div>
+                    <div class="row header-bottom">
+                        <div class="col-sm-6">
+                            <h1><a href="#welcome" class="cc-active">Getting Started</a></h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="pull-right logo">
+                                <img src="image/logo.png" class="img-responsive">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="container-fluid inner">
+                <div class="wrapper">
+                    <div class="content">
+                        <div class="row">
+                            <div class="col-sm-2 custom">
+                                <ul class="docs-nav">
+                                    <li><a href="#start" class="cc-active has-child collapse">
+                                            Step1 : Installation
+                                        </a>
+                                        <ul class="installation">
+                                            <li><a href="#common-steps">1.1. Installation(Common Steps)</a></li>
+                                            <li><a href="#install-theme">1.2. Upload Theme Files</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="#logo-image" class="cc-active">Step2 : Logo and Image Size Settings</a></li>
+                                    <li><a href="#language" class="cc-active">Step3 : Language Settings</a></li>
+                                    <li><a class="cc-active has-child collapse" href="#theme-layouts">
+                                            Step4 : Theme Layout
+                                        </a>
+                                         <ul class="layouts">
+                                            <li><a href="#layout1" class="cc-active">4.1. Install Module</a></li>
+                                            <li><a href="#layout-setting" class="cc-active">4.2. Layout setting</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="#mega" class="cc-active">Step5 : Mega Menu</a></li>
+                                    <li><a href="#filter" class="cc-active">Step6 : Filter</a></li>
+                                    <li><a href="#information" class="cc-active">Step7 : Information</a></li>
+                                    <li><a href="#account" class="cc-active">Step8 : Account</a></li>
+                                    <li><a href="#category" class="cc-active">Step9 : Category</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-10 custom">
+                                <div class="doc-content">
+                                    <!--step1:-->
+                                    <div id="start">
+                                        <h2>Step1 : Installation </h2>
+
+                                        <!--1.-->
+                                        <h3 id="common-steps">Installation (Common Steps)</h3>
+                                        <p class="red">-Please, read the whole section, before attempting to install the theme.</br>
+                                            -it is recommend to always backup your system before making any upgrades or changes!
+                                        </p>
+
+
+                                         <ul>
+                                            <li><span>There are two ways to install a SO Theme:</span></li></ul>
+                                         <p>For installation of Opencart, you just need to follow these steps, <a href="http://docs.opencart.com" class="link" target="_blank">Installation </a></p>
+                                         <p><span>Install Quickstart:</span> By using this package, you will set the template exactly as our Demo with sample data.</p>
+                                         <p><span>Install Template </span>: If you exist a opencart website you can install only template.</p>
+                                         <h4 class="blue">1.1 Install with Quickstart Package:</h4>
+
+                                         <h4 style="margin-top: 20px;"> 1.1.1 Create new database</h4>
+                                         <p><span>Step 1:</span> Open your Browser and type : localhost/phpmyadmin or yourdomain/phpmyadmin</p>
+                                         <p><span>Step 2:</span> Then create database</p>
+                                         <h4 style="margin-top: 20px;"> 1.1.2 Extract and Upload the whole quickstart package (admin, catalog, image … in tt_cygnus_quickstart folder ) to your server</h4>
+                                          <h4 style="margin-top: 20px;"> 1.1.3 Open browser and navigate to your site (where the quickstart uploaded) to load default Opencart installer with the database you just created.</h4>
+                                           <h4 style="margin-top: 20px;"> 1.1.4 Enter the username and password for the administration</h4>
+                                            <h4 style="margin-top: 20px;"> 1.1.5 Installation Complete</h4>
+                                            <span>Note:</span><span style="margin-top: 20px;" class="red"> At admin ,Go to > Extension > Modifications > Click on refresh button at top</span><hr>
+
+                                            <!-- Requirements -->
+                                        <h3>System Requirements</h3> 
+                                         <ul><li><span>These extensions must be enabled for OpenCart to install properly on the web server.</span></li>
+                                         <ul>
+                                            <li>
+                                                 <strong>Web server</strong>: Web Server (Apache suggested)
+                                            </li>
+                                            <li>
+                                                 <strong>PHP</strong> PHP 5.4+
+                                            </li>
+                                            <li>
+                                                 <strong>MySQL</strong> Database (MySQLi suggested)
+                                            </li>
+                                         </ul>
+                                         <h4>Required PHP libraries / modules</h4>
+                                            <ul>
+                                                <li>Curl</li>
+                                                <li>ZIP</li>
+                                                <li>Zlib</li>
+                                                <li>GD Library</li>
+                                                <li>Mcrypt</li>
+                                                <li>Mbstrings</li>
+                                                <li>Xml</li>
+                                            </ul>
+                                            <li><p>To install this theme you must have a working version of opencart already installed. For information in regard to installing the opencart platform, please see the opencart Wiki : </p>
+                                                <a rel="nofollow" href="http://docs.opencart.com/en-gb/getting-started">
+                                                    http://docs.opencart.com/en-gb/getting-started
+                                                </a>
+                                            </li>
+                                        
+                                        <h3>Supported Version</h3>
+                                            <ul>
+                                                 <li>3.0.3.3</li>
+                                                 <li>3.0.3.2</li>
+                                                 <li>3.0.3.1</li>
+                                                 <li>3.0.2.0</li>
+                                                 <li>3.0.1.2</li>
+                                                 <li>3.0.1.1</li>
+                                                 <li>3.0.0.0</li>
+                                            </ul>
+                                        </ul>
+                                        <!-- Requirements -->
+
+                                              <h4 class="blue">1.2 Install with Template Package:</h4>
+                                        <!--2.-->
+                                        <h3 id="install-theme"> Upload Theme Files</h3>
+                                        <p>After you complete the installation of opencart, please follow below steps to install themes</p>
+                                        <ul>
+                                            <li><span>Step 1 </span>- Unzip the <span>Greenesta.zip</span> package.</li>
+                                        </ul>
+
+
+                                        <div class="doc-img">
+                                            <img src="image/installation/doc.png" class="img-responsive">
+                                        </div>
+
+                                        <h5 class="blue">Replace Theme Files</h5>
+                                        <ul>
+                                            <li>Paste these directories from 'Theme-package' to your opencart root folder.</li>
+                                            <li><span>"admin"</span> (Overwrite this folder)</li>
+                                            <li><span>"catalog"</span> (Overwrite this folder)</li>
+                                            <li><span>"image"</span> (Overwrite this folder)</li>
+                                        </ul>
+
+                                        <p class="red">AFTER UPLOAD THEME FILES, YOU MAY GET ERROR(COULD NOT LOAD FILE) ON FRONT SIDE.</br>
+                                            BUT DON'T WORRY, WHENYOU ACTIVE OUR THEME, IT IS WORK PERFECTLY.
+                                        </p>
+
+                                        <h5>After Completing Installation Steps Must be Select Theme Store In Admin Panel for that:</h5>
+                                        <ul>
+                                            <li><span>For Default Home : </span>Go to Extensions > Extensions > Themes > Greenesta > Edit</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/installation/theme.png" class="img-responsive">
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <!--step2:-->
+                                    <div id="logo-image">
+                                        <h3>Step2 : Logo and Image size settings </h3>
+                                        <ul>
+                                            <li><h5>For Logo setting , Go to  System > Setting > Edit > Images, </h5></li>
+                                            <li>From Store Logo you can upload your logo image.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/logo-lang/stores.png" class="img-responsive">
+                                        </div>
+                                        <h5>For Image Size setting , </h5>
+                                        <h5><span>For Default_Home : </span> Go Extensions > Extensions  > Themes  > Greenesta > Edit ,</h5>
+                                        <ul>
+                                            <li>Change category image thumb size to: <span>200 X 180</span>,</li>
+                                            <li>Change product image thumb size to: <span>620 X 620</span>,</li>
+                                            <li>Change Product Image Popup Size to: <span>700 X 700</span>,</li>
+                                            <li>Change product image list size to: <span>283 X 283 </span>,</li>
+                                            <li>Change additional product image size to: <span>140 X 140</span>,</li>
+                                            <li>Change related product image size to: <span> 283 X 283 </span>,</li>
+                                            <li>Change wish list image size to: <span> 90 X 90 </span>,</li>
+                                           <li>Change cart image size to: <span> 100 X 100 </span>,</li>
+                                            <li>Change store image size to: <span> 268 X 50 </span>.</li>
+                                            <li>Click on <span> “Save” </span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/logo-lang/theme.png" class="img-responsive">
+                                        </div>
+
+                                    </div>
+                                    <ul>
+                                        <li>For Store setting Go To System->Settings  Click on <span>store</span> Edit link, and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/store.png" class="img-responsive">
+                                    </div>
+                                    <hr>
+                                    <!--step3:-->
+                                    <div id="language">
+                                        <h3>Step 3 : Language Settings </h3>
+                                        <p>To Enable Laguages login to your admin panel  and do follwing settings.</p>
+                                        <ul>
+                                            <li><h5>For Example To add Arabic Language :  </h5></li>
+                                            <li>Go to  System > Localisation > <span>Languages</span>, </li>
+                                            <li>Click on <span>“Add New”</span> button to add new Language.</li>
+                                            <li><span>Language Name :</span> Arabic,</li>
+                                            <li><span>Code : </span> ar,</li>
+                                            <li><span>Locale :</span> ar-UN,ar_UN,UTF-8,Arabic,</li>
+                                            <li><span>Status :</span> Enable,</li>
+                                            <li><span>Sort Order :</span> as you like.</li>
+                                            <li>Click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/logo-lang/language.png" class="img-responsive">
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <!--step4:-->
+                                    <div id="theme-layouts">
+                                        <h3>Step4 : Theme Layouts </h3>
+                                        <div id="layout1">
+                                        <h4 class="blue">4.1. Install Module</h4>
+                                    </div>
+
+                                        <!--1.-->
+                                       <!--  <div id="layout1" class="layout-box">
+                                            <h4 class="blue">4.1. Megamall</h4>
+                                            <div class="doc-img">
+                                                <img src="image/layout-image/layout-1.jpg" class="img-responsive">
+                                            </div>
+                                        </div>
+ -->
+                                        <!--m-1.-->
+
+                                        <h4 class="blue">4.1.1. Module : Slideshow->Home Page Slideshow</h4>
+                                        <ul>
+                                            <li>For adding Slideshow banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>Home Page Slideshow</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                                            <xmp>
+<h2>Man's Shoes 2020</h2>
+<h1>New Arrival Sale</h1> 
+        <p>it is a long established fact that a reader will be that distracted by the readable 
+content of a page when in looking at its layout. The point of using Lorem 
+Ipsum is that it has a adablemore-or-less normal...</p>    
+  
+                                            </xmp>
+                                        </pre>
+                                        <div class="doc-img">
+                                            <img src="image/modules/slideshow_banner.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>Slideshow</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span> Home Page Slideshow </span>,</li>
+                                            <li>From banner select <span>Home Page Slideshow</span>,</li>
+                                            <li>Give Width & Height <span>(1234 X 470)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/slideshow.png" class="img-responsive">
+                                        </div>
+
+                                        <!--m-2.-->
+                                        <h4 class="blue">4.1.2. Module : HTML Content-> HTML Page Service</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span> HTML Page Service</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                                            <xmp>
+<div class="">
+<div class="deliveryinfo text-xs-center">
+<div class="col-sm-4 col-xs-12 sbr">
+<ul class="list-unstyled">
+<li class="ser-svg"><span><svg><use xlink:href="#support"></use></svg></span></li>
+<li class="text-xs-left">
+<h4>24/7 free support</h4>
+<p>online support 24/7</p>
+</li>
+</ul>
+</div>
+
+<div class="col-sm-4 col-xs-12 sbr">
+<ul class="list-unstyled">
+<li class="ser-svg"><span><svg><use xlink:href="#money"></use></svg></span></li>
+<li class="text-xs-left">
+<h4>money back guarantee</h4>
+<p>100% Secure Payment</p>
+</li>
+</ul>
+</div>
+
+
+<div class="col-sm-4 col-xs-12 sbr">
+<ul class="list-unstyled">
+<li class="ser-svg"><span><svg><use xlink:href="#Shipping"></use></svg></span></li>
+<li class="text-xs-left">
+<h4>Free Worldwide Shipping</h4>
+<p>On Order Over $99</p>
+</li>
+</ul>
+</div>
+</div>
+</div>    
+                                            </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/service.png" class="img-responsive">
+                                        </div>
+                                        <!--m-3.-->
+                                         <h4 class="blue">4.1.3. Module : centerbannerbanner-> centerbannerbanner</h4>
+                                        <ul>
+                                            <li>For adding centerbannerbanner banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>center banner</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/centerbannerbanner.png" class="img-responsive">
+                                        </div> 
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>centerbannerbanner</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>centerbannerbanner</span>,</li>
+                                            <li>From banner select <span>centerbannerbanner</span>,</li>
+                                            <li>Give Width & Height <span>(490 X 600)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                       <div class="doc-img">
+                                            <img src="image/modules/center_banner.png" class="img-responsive">
+                                        </div>
+                                        <!--m-4.-->
+                                         <h4 class="blue">4.1.4. Module : bannerbottom-> bannerbottom</h4>
+                                        <ul>
+                                            <li>For adding bannerbottom banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>Bannerbottom</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/banner_bottom.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>bannerbottom</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>bannerbottom</span>,</li>
+                                            <li>From banner select <span>bannerbottom</span>,</li>
+                                            <li>Give Width & Height <span>(1010 X 285)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/bannerbottom.png" class="img-responsive">
+                                        </div>
+                                             <!--m-5.-->
+                                         <h4 class="blue">4.1.5. Module : offerbanner-> offerbanner</h4>
+                                        <ul>
+                                            <li>For adding offerbanner banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>Offer banner</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/offer_banner.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>offerbanner</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>offerbanner</span>,</li>
+                                            <li>From banner select <span>offerbanner</span>,</li>
+                                            <li>Give Width & Height <span>(490 X 285)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/offerbanner.png" class="img-responsive">
+                                        </div>
+
+
+                                        <!--m-6.-->
+                                        <h4 class="blue">4.1.6. Module : Featured -> Home Page Featured</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Featured click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span> Home Page Featured</span>,</li>
+                                            <li>From feature product select: <span> products</span>,</li>
+                                            <li>Give Limit <span>12</span> and Width & Height <span>(276 X 276)</span> (your product image Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/featured.png" class="img-responsive">
+                                        </div>
+
+
+                                         <!--m-7.-->
+                                        <h4 class="blue">4.1.7. Module : Bestsellers -> Home Page Bestseller</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Bestsellers click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span>Home Page Bestseller</span>,</li>
+                                            <li>Give Limit <span>12</span> and Width & Height <span>(283 X 283)</span> (your product image Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/bestseller.png" class="img-responsive">
+                                        </div>
+
+                                        <!--m-8.-->
+                                        <h4 class="blue">4.1.8. Module : Latest -> Home Page Latest</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Latest click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span>Home Page Latest</span>,</li>
+                                            <li>Give Limit <span>12</span> and Width & Height <span>(283 X 283)</span> (your product image Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/latest.png" class="img-responsive">
+                                        </div>
+                                    <!--m-9.-->
+                                        <h4 class="blue">4.1.9. Module : HTML Content-> HTML page offerblock</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span> HTML page offerblock</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                                            <xmp>
+    <div class="container">
+        <div class="offer-text">
+            <div class="offer-text-left">
+              <h1>Rewards just for shopping!</h1>
+              <p>Don’t forget to opt into Multistore News to have your offers and rewards delivered right to your inbox!</p>
+            </div>
+        </div>
+</div>   
+                                            </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/offerblock.png" class="img-responsive">
+                                        </div>
+                                        
+                                        <!--m-10.-->
+                                         <h4 class="blue">4.1.10. Module : Imgbanner -> Img banner</h4>
+                                        <ul>
+                                            <li>For adding Img Banner go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span> Img banner</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/img_banner.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>Imgbanner</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>Img banner</span>,</li>
+                                            <li>From banner select <span>Img banner</span>,</li>
+                                            <li>Give Width & Height <span>(490 X 506)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/imgbanner.png" class="img-responsive">
+                                        </div>
+                                        <!--m-11.-->
+                                        <h4 class="blue">4.11. Module : Home Page categories -> Home Page categories</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Home Page categories click on <span>"Add Module"</span> button.</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/homecate.png" class="img-responsive">
+                                        </div>
+                                         <!--m-12.-->
+                                        <h4 class="blue">4.1.12. Module : OC Products -> Daily Deal</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Daily Deal click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span>Daily Deal</span>,</li>
+                                            <li>Give Limit <span>20</span> and Width & Height <span>(700 X 700)</span> (your product image Width and height),</li>
+                                            <li>give Show countdownWhen a product has specific price with end date <span>Yes</span></li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/ocproduct.png" class="img-responsive">
+                                        </div>
+                                         <ul>
+                                             <li><span class="red">Note:</span><li>Go To Product , Click on <span>"special"</span> button <span style="margin-top: 20px;">Give Start And End Date</span></li>
+                                        </ul>
+                                        <!--m-13.-->
+                                        <h4 class="blue">4.1.13. Module : Specials -> Home Page Specials</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Specials click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span>Home Page Specials</span>,</li>
+                                            <li>Give Limit <span>12</span> and Width & Height <span>(283 X 283)</span> (your product image Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/special.png" class="img-responsive">
+                                        </div>
+                                        <!--m-14.-->
+                                         <h4 class="blue">4.1.14. Module : sellbanner-> sellbanner</h4>
+                                        <ul>
+                                            <li>For adding sellbanner banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>sell banner</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/sellbanner.png" class="img-responsive">
+                                        </div> 
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>sellbanner</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>sellbanner</span>,</li>
+                                            <li>From banner select <span>sellbanner</span>,</li>
+                                            <li>Give Width & Height <span>(1530 X 300)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                       <div class="doc-img">
+                                            <img src="image/modules/sell_banner.png" class="img-responsive">
+                                        </div>
+                                        <!--m-16.-->
+                                         <h4 class="blue">4.1.16. Module : Special -> left popular</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Special click on <span>"Add Module"</span> button.</li>
+                                            <li>Give Module name: <span>left popular</span>,</li>
+                                            <li>Give Limit <span>20</span> and Width & Height <span>(200 X 200)</span> (your product image Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/popular.png" class="img-responsive">
+                                        </div> 
+                                        <!--m-17.-->
+                                        <h4 class="blue">4.1.17. Module : Banner-> left banner</h4>
+                                        <ul>
+                                            <li>For adding offerbanner banners go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new banner.</li>
+                                            <li>Give Banner name: <span>left banner</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your banner and click on image to upload your banner.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another banners.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/left_banner.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main banner go to Extensions > Extensions > Modules > <span>left banner</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span>left banner</span>,</li>
+                                            <li>From banner select <span>left banner</span>,</li>
+                                            <li>Give Width & Height <span>(367 X 410)</span> (your banner Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/leftbanner.png" class="img-responsive">
+                                        </div>
+                                        <!--m-18.-->
+                                        <h4 class="blue">4.1.18. Module : Carousel->Home Page manufacture</h4>
+                                        <ul>
+                                            <li>For adding brands go to  Design ><span> Banners</span></li>
+                                            <li>Click on <span>“Add New”</span> button to add new brand.</li>
+                                            <li>Give Banner name: <span>Home Page manufacture</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>and click on <span>“Add Banner”</span> button.</li>
+                                            <li>Give title of your Banner and click on image to upload your brand.</li>
+                                            <li>Again click on <span>“Add Banner”</span> button and upload another brand.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/brand.png" class="img-responsive">
+                                        </div>
+                                        <ul>
+                                            <li>Now to activate your Main brand go to Extensions > Extensions > Modules > <span>Carousel</span>   click on Edit link </li>
+                                            <li>Give Module name:  <span> Home Page manufacture</span>,</li>
+                                            <li>From Banner select <span>Home Page manufacture</span>,</li>
+                                            <li>Give Width & Height <span>(200 X 150)</span> (brands Width and height),</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/brand-ac.png" class="img-responsive">
+                                        </div>
+
+                                            <!--m-19.-->
+                                        <h4 class="blue">4.1.19. Module : Webi Blog -> Home blog</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span>Webi Blog</span> > Edit (Click on Install link if Edit link is not there)</li>
+                                            <li>Give Module name:  <span>  Home blog </span></li>
+                                            <li>From status select <span>Enabled</span></li>
+                                            <li>Give Image size <span>(1000 X 700)</span>(your blog image Width and height)</li>
+                                            <li>And Give Limit <span>8</span> and character limit <span>50</span></li>
+                                            <li>From Allow Comments select <span>Yes</span></li>
+                                            <li>From Login Required select <span> No</span></li>
+                                            <li>From Automatic Approval select <span> Yes</span></li>
+                                            <li>Now click on <span>“Save”</span> button.</li>(Save will redirect this page.)
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/webi_image.png" class="img-responsive">
+                                        </div>
+
+                                        <ul>
+                                            <li>Now click on Add Blog button to adding Blog,</li>
+                                            <li>In <span>General</span> tab, Give Title : <span>Libero lorem vehicula</span></li>
+                                            <li>Now click on Code View button in text editor block and write your Blog description.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                    <xmp>
+Shop Laptop feature only the best laptop deals on the market. By comparing laptop deals from the likes of PC World, Comet, Dixons, The Link and Carphone Warehouse, Shop Laptop has the most comprehensive selection of laptops on the internet. At Shop Laptop, we pride ourselves on offering customers the very best laptop deals. 
+                    </xmp>
+                                        </pre>
+                                        <div class="doc-img">
+                                            <img src="image/modules/webiblog1.png" class="img-responsive">
+                                        </div>
+
+                                        <ul>
+                                            <li>Next in <span>Data</span> tab,</li>
+                                            <li>From Status select <span>Enable</span>.</li>
+                                            <li>Upload your blog <span>image.</span>.</li>
+                                            <li>From Module select <span>Blog</span>.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <ul>
+                                            <li>Again click on Add Blog button for add another Blog.</li>
+                                            <li>In <span>General</span> tab, Give Title : <span>Quisque egestas ullamco laboris</span></li>
+                                            <li>Now click on Code View button in text editor block and write your Blog description.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                    <xmp>
+Shop Laptop feature only the best laptop deals on the market. By comparing laptop deals from the likes of PC World, Comet, Dixons, The Link and Carphone Warehouse, Shop Laptop has the most comprehensive selection of laptops on the internet. At Shop Laptop, we pride ourselves on offering customers the very best laptop deals.
+                    </xmp>
+                                        </pre>
+                                        <div class="doc-img">
+                                            <img src="image/modules/webiblog1.png" class="img-responsive">
+                                        </div>
+
+                                        <ul>
+                                            <li>Next in <span>Data</span> tab </li>
+                                            <li>From Status select <span>Enable</span>.</li>
+                                            <li>Upload your blog <span>image.</span></li>
+                                            <li>From Module select <span>Blog</span>.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/webi_image1.png" class="img-responsive">
+                                        </div>
+
+                                        <ul>
+                                            <li>Same way you can add more blogs by click on Add Blog button.</li>
+                                            <li>Also you can view comments of particular Blog by click on View Comments button and you can view full list of blogs.</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/webi_main.png" class="img-responsive">
+                                        </div> 
+                                             <!--m-20.-->
+                                        <h4 class="blue">4.1.20. Module : HTML Content-> HTML Page Testimonial</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span> HTML Page Testimonial</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                                            <xmp>
+<div class="parallex text-center">
+<div class="testimonial col-sm-6 col-xs-12">
+<div id="testi" class="owl-carousel owl-theme">
+<div class="item">
+<div class="test-img">
+<img class="img-responsive center-block timg" src="image/catalog/testimonial/1.png">
+</div>
+<div class="test-desc">
+<h2>mr. John doe -</h2>
+<h5>developer</h5>
+<p>Sed elit quam, iaculis sed semper sit amet udin vitae nibh. at magna akal semperFusce commodo molestie  elit quam, iaculis sed iaculis sempsDolor tusimaolatiupat magna akal semperFusce.</p>
+</div>
+<div>
+</div>
+</div>
+<div class="item">
+<div class="test-img">
+<img class="img-responsive center-block timg" src="image/catalog/testimonial/2.png">
+</div>
+<div class="test-desc">
+<h2>mr. onsequat -</h2>
+<h5>developer</h5>
+<p>Sed elit quam, iaculis sed semper sit amet udin vitae nibh. at magna akal semperFusce commodo molestie  elit quam, iaculis sed iaculis sempsDolor tusimaolatiupat magna akal semperFusce.</p>
+</div>
+<div>
+</div>
+</div>
+<div class="item">
+<div class="test-img">
+<img class="img-responsive center-block timg" src="image/catalog/testimonial/3.png">
+</div>
+<div class="test-desc">
+<h2>mr. John doe -</h2>
+<h5>developer</h5>
+<p>Sed elit quam, iaculis sed semper sit amet udin vitae nibh. at magna akal semperFusce commodo molestie  elit quam, iaculis sed iaculis sempsDolor tusimaolatiupat magna akal semperFusce.</p>
+</div>
+<div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+                                            </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/testimonial.png" class="img-responsive">
+                                        </div>
+
+                          
+
+                                           
+                                            
+
+                                         
+                                        
+
+                                        <!--m-21.-->
+                                        <h4 class="blue">4.1.21. Module : Webi Newsletter->Newsletter Popup</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Newsletter Popup click on <span>"Install(After install click on "Edit" link)"</span> button.</li>
+                                            <li>Give Module name: <span>Newsletter Popup</span>,</li>
+                                            <li>From Use Popup select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/newsletterpopup.png" class="img-responsive">
+                                        </div>
+
+                                         <!--m-22.-->
+                                        <h4 class="blue">4.1.22. Module : Webi Newsletter->Newsletter</h4>
+                                        <ul>
+                                            <li>Go to Extentions > Extensions > Modules > Newsletter click on <span>"Install(After install click on "Edit" link)"</span> button.</li>
+                                            <li>Give Module name: <span>Newsletter</span>,</li>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/newsletter.png" class="img-responsive">
+                                        </div> 
+                                        
+                                        
+                                        <!--m-23.-->
+                                        <h4 class="blue">4.1.23. Module : HTML Content-> HTML Footer Contact</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span>HTML Footer Contact</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                    <xmp>
+<div class="storeinfo">  <h5><span>Contact us</span>
+   <button type="button" class="btn toggle collapsed" data-toggle="collapse" data-target="#contact" aria-expanded="false"></button>
+</h5>
+<div id="contact" class="footer-collapse footcontact collapse" aria-expanded="false" style="height: 0px;">
+<ul class="list-unstyled f-left">
+  <li><svg width="20px" height="20px"><use xlink:href="#add"></use></svg>1093  Marigold Lane<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Coral Way<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;surat</li>
+  <li><svg width="20px" height="20px"><use xlink:href="#phone"></use></svg>610-403-403</li>
+  <li><svg width="22px" height="22px"><use xlink:href="#mail"></use></svg>company@example.com</li>
+</ul>
+  <h5>payment</h5>
+<ul class="list-inline list-unstyled foot-payment">
+          <li><a href="#"><i class="fa fa-cc-mastercard"></i></a></li>
+          <li><a href="#"><i class="fa fa-cc-visa"></i></a></li>
+          <li><a href="#"><i class="fa fa-credit-card"></i></a></li>
+          <li><a href="#"><i class="fa fa-cc-paypal"></i></a></li>
+      </ul>
+
+</div>
+</div>
+
+
+
+                    </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/footerleft.png" class="img-responsive">
+                                        </div>
+
+                                        <!--m-24.-->
+                                        <h4 class="blue">4.1.24 Module : HTML Content-> HTML Footer bottom link</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span>HTML Footer bottom link</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                    <xmp>
+<ul class="list-unstyled list-inline">              
+  <li><a href="#">snack plants</a></li>
+  <li><a href="#">garden plant</a></li>
+  <li><a href="#">house plants</a></li>
+  <li><a href="#">indoor plants</a></li>
+  <li><a href="#">small plants</a></li>
+  <li><a href="#">office plants</a></li>
+  <li><a href="#">Crenate Leaf</a></li>
+  <li><a href="#">Vascular Plant</a></li>
+  <li><a href="#">Indian Basil</a></li>
+  <li><a href="#">natural</a></li>
+  <li><a href="#">Emergents</a></li>
+  <li><a href="#">small plants</a></li>
+  </ul>      
+
+                     </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/footerapp.png" class="img-responsive">
+                                        </div>
+
+                                       
+
+                                          <!--m-25.-->
+                                        <h4 class="blue">4.1.25. Module : HTML Content-> HTML Footer social</h4>
+                                        <ul>
+                                            <li>Go to Extensions > Extensions > Modules > <span> HTML Content</span> > Install(After install click on "Edit" link)</li>
+                                            <li>Give Module Name: <span>HTML Footer social</span></li>
+                                            <li>Now In Description click on Code View button in text editor block and paste this code.</li>
+                                        </ul>
+                                        <pre class="prettyprint">
+                    <xmp>
+<h4 class="c-info">follow us:</h4>
+<ul class="list-unstyled fsocial list-inline">
+    <li class="facebook"><a href="#"><i class="fa fa-facebook"></i></a></li>
+    <li class="twitter"><a href="#"><i class="fa fa-twitter"></i></a></li>
+    <li class="instagram"><a href="#"><i class="fa fa-instagram"></i></a></li>
+    <li class="pinterest"><a href="#"><i class="fa fa-pinterest-p"></i></a></li>
+</ul>                     </xmp>
+                                        </pre>
+                                        <ul>
+                                            <li>From status select <span>Enabled</span>,</li>
+                                            <li>Now click on <span>“Save”</span> button.</li>
+                                        </ul>
+                                        <div class="doc-img">
+                                            <img src="image/modules/footersocial.png" class="img-responsive">
+                                        </div>
+
+
+                                       
+
+                                       
+
+
+
+                                        <!--over layouts-->  </div>
+                                    <!--2:-->
+                                    <div id="layout-setting">
+                                        <h4 class="blue">4.2. Layout Settings</h4>
+                                    </div>
+                                     <hr class="short-brd">
+                                    <ul>
+                                        <p class="red">-Before you add category layout setting enable & add the module in extension->module.</br />
+                                            -Now Go To Extensions  extension -> modules. </p>
+                                    </ul>
+                                    
+                                    <hr class="short-brd">
+                                     <!--4.2.3.1.-->
+                                    <h4 class="blue">1.3.1. Module : Category->Category</h4>
+                                    <p>See in Step:10 Category</p>
+                                    <!--4.2.3.2.-->
+                                    <h4 class="blue">1.3.2. Module : Filter->Filter</h4>
+                                    <p>See in Step:6 Filter</p>
+                                    <!-- 4.2.1. -->
+                                    <ul>
+                                        <li>For Layout Setting Go to  Design > <span>Layouts</span> ,</li>
+                                        <li>For <span> Account </span> Layout setting Click on <span> Account </span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_account.png" class="img-responsive">
+                                    </div>
+                                    <!-- 4.2.2. -->
+                                    <ul>
+                                        <li>For <span> Affiliate </span> Layout setting Click on <span> Affiliate </span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_affiliate.png" class="img-responsive">
+                                    </div>
+
+                                    <!--4.2.3.-->
+                                    <ul>
+                                        <li>For <span> Home </span> Layout setting Click on <span>Home</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_category.png" class="img-responsive">
+                                    </div>
+
+                                    <!--4.2.4.-->
+                                    <ul>
+                                        <li>For <span> Category </span> Layout setting Click on <span>Category</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_home.png" class="img-responsive">
+                                    </div>
+
+                                    <!-- 4.2.5.-->
+                                    <ul>
+                                        <li>For <span> Checkout </span> Layout setting Click on <span>Checkout</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_checkout.png" class="img-responsive">
+                                    </div>
+
+                                    <!-- 4.2.6.-->
+                                    <ul>
+                                        <li>For <span> Compare </span> Layout setting Click on <span>Compare</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_compare.png" class="img-responsive">
+                                    </div>
+
+                                    <!-- 4.2.7.-->
+                                    <ul>
+                                        <li>For <Span> Contact </span> Layout setting Click on <span>Contact</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_contact.png" class="img-responsive">
+                                    </div>
+
+                                    <!-- 4.2.8.-->
+                                    <ul>
+                                        <li>For <Span> Information </span> Layout setting Click on <span>Information</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_information.png" class="img-responsive">
+                                    </div>
+
+                                    <!-- 4.2.9.-->
+                                    <ul>
+                                        <li>For <span>Default </span> Layout setting Click on <span>Default</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_default.png" class="img-responsive">
+                                    </div>
+
+                                    <!--4.2.11.-->
+                                    <ul>
+                                        <li>For <span> Manufacturer </span> Layout setting Click on <span>Manufacturer</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_manufacture.png" class="img-responsive">
+                                    </div>
+
+                                    <!--4.2.12.-->
+                                    <ul>
+                                        <li>For <span> Product </span> Layout setting Click on <span>Product</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_product.png" class="img-responsive">
+                                    </div>
+                                    <!--4.2.13.-->
+                                    <ul>
+                                        <li>For <span> Search </span> Layout setting Click on <span>Search</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_search.png" class="img-responsive">
+                                    </div>
+                                    <!--4.2.14.-->
+                                    <ul>
+                                        <li>For <span> Sitemap </span> Layout setting Click on <span>Sitemap</span> layout Edit link,(Click on Add Link if not available) and set below settings.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/Layout/layout_sitemap.png" class="img-responsive">
+                                    </div>
+
+
+                                    <hr>
+                                    <!--step5:-->
+                                    <div id="mega">
+                                        <h3>Step 5 : Mega Menu</h3>
+                                    </div>
+                                    <ul>
+                                        <li>Go to Catelog > Categories > Edit >,</li>
+                                        <li>Select Data Tab,</li>
+                                        <li>Check Top Checkbox to Show MainCategories in Home Page Menu</li>
+                                        <li>Columns : Enter Number Of Columns(to Use for the bottom 3 categories.Only Works for Top Parent Categories)</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/modules/mega.png" class="img-responsive">
+                                    </div>
+                                    <hr>
+                                    <!--step6:-->
+                                    <div id="filter">
+                                        <h3>Step 6 : Filter</h3>
+                                    </div>
+                                    <ul>
+                                        <li>Go to Extentions > Extensions > Modules > <span>Filter</span> > Edit (Click on Install link if Edit link is not there),</li>
+                                        <li>From Status select <span>Enabled</span>,</li>
+                                        <li>Click on <span>"Save"</span> button.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/modules/filter.png" class="img-responsive">
+                                    </div>
+                                    <hr>
+                                    <!--step7:-->
+                                    <div id="information">
+                                        <h3>Step 7 : Information</h3>
+                                    </div>
+                                    <ul>
+                                        <li>Go to Extentions > Extensions > Modules > <span>Information</span> > Edit (Click on Install link if Edit link is not there),</li>
+                                        <li>From Status select <span>Enabled</span>,</li>
+                                        <li>Click on <span>"Save"</span> button.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/modules/information.png" class="img-responsive">
+                                    </div>
+                                    <hr>
+                                    <!--step8:-->
+                                    <div id="account">
+                                        <h3>Step 8 : Account</h3>
+                                    </div>
+                                    <ul>
+                                        <li>Go to Extensions > Extensions > Modules > <span>Account</span> > Edit (Click on Install link if Edit link in not there),</li>
+                                        <li>From Status select <span>Enabled</span>,</li>
+                                        <li>Click on <span>"Save"</span> button.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/modules/account.png" class="img-responsive">
+                                    </div>
+                                    <hr>
+                                    <!--step9:-->
+                                    <div id="category">
+                                        <h3>Step 9 : category</h3>
+                                    </div>
+                                    <ul>
+                                        <li>Go to Extentions > Extensions > Modules > <span>Category</span> > Edit (Click on Install link if Edit link is not there),</li>
+                                        <li>From Status select <span>Enabled</span>,</li>
+                                        <li>Click on <span>"Save"</span> button.</li>
+                                    </ul>
+                                    <div class="doc-img">
+                                        <img src="image/modules/category.png" class="img-responsive">
+                                    </div>
+
+
+                                    <!--over-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="container-fluid inner">
+                <div class="brd">
+                    <p class="text-center"> &copy; All Rights Reserved.</p>
+                </div>
+            </footer>
+        </div>
+    </body>
+</html>
+

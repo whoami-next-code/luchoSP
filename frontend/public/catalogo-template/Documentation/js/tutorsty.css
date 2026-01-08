@@ -1,0 +1,9 @@
+#mytest {
+/* Typical fixed height and fixed width example */s
+height: 500px;
+overflow: auto;
+/* IE overflow fix, position must be relative or absolute*/
+background-color: #FFFFFF;
+padding: 15px;
+}
+

@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsPositive, IsString, Min, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 class ItemDto {
   @IsString()
@@ -25,4 +33,3 @@ export class CrearCompraMultipleDto {
   @Type(() => ItemDto)
   items: ItemDto[];
 }
-

@@ -16,8 +16,8 @@ coverage/
 
 # Environment & local DB
 .env
-backend/.env
-frontend/.env.local
+**/.env
+**/.env.*
 backend/dev.sqlite
 
 # Logs & temp

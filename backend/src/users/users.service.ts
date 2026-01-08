@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -11,23 +12,42 @@ export class UsersService {
     private readonly repo: Repository<User>,
   ) {}
 
-  async create(data: { email: string; password: string; role?: UserRole; fullName?: string }) {
-    const passwordHash = await bcrypt.hash(data.password, 10);
+  async create(data: {
+    email: string;
+    password?: string;
+    role?: UserRole;
+    fullName?: string;
+    verified?: boolean;
+    phone?: string;
+    supabaseUid?: string;
+  }) {
+    const rawPassword = data.password ?? randomBytes(12).toString('hex');
+    const passwordHash = await bcrypt.hash(rawPassword, 10);
     const entity = this.repo.create({
-      email: data.email,
+      email: data.email.toLowerCase().trim(),
       passwordHash,
       role: data.role ?? UserRole.CLIENTE,
       fullName: data.fullName,
+      verified: data.verified ?? false,
+      phone: data.phone,
+      supabaseUid: data.supabaseUid,
     });
     return this.repo.save(entity);
   }
 
-  findByEmail(email: string) {
-    return this.repo.findOne({ where: { email } });
+  findBySupabaseUid(uid: string) {
+    return this.repo.findOne({ where: { supabaseUid: uid } });
   }
 
-  findAll() {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+  findByEmail(email: string) {
+    return this.repo.findOne({ where: { email: email.toLowerCase().trim() } });
+  }
+
+  findAll(params?: { role?: UserRole; verified?: boolean }) {
+    const where: Partial<User> = {};
+    if (params?.role) where.role = params.role;
+    if (typeof params?.verified === 'boolean') where.verified = params.verified;
+    return this.repo.find({ where, order: { createdAt: 'DESC' } });
   }
 
   findOne(id: number) {
@@ -38,7 +58,10 @@ export class UsersService {
     const found = await this.repo.findOneBy({ id });
     if (!found) throw new NotFoundException('Usuario no encontrado');
     if ((data as any).password) {
-      (data as any).passwordHash = await bcrypt.hash((data as any).password, 10);
+      (data as any).passwordHash = await bcrypt.hash(
+        (data as any).password,
+        10,
+      );
       delete (data as any).password;
     }
     Object.assign(found, data);
@@ -49,5 +72,40 @@ export class UsersService {
     const res = await this.repo.delete(id);
     if (!res.affected) throw new NotFoundException('Usuario no encontrado');
     return { deleted: true };
+  }
+
+  async findUnverifiedOlderThan(days: number) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return this.repo.find({
+      where: {
+        verified: false,
+        createdAt: LessThan(date),
+      },
+    });
+  }
+
+  async removeUnverifiedOlderThan(days: number) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    const result = await this.repo.delete({
+      verified: false,
+      createdAt: LessThan(date),
+    });
+    return result.affected || 0;
+  }
+
+  async fixEmails() {
+    const users = await this.repo.find();
+    let count = 0;
+    for (const user of users) {
+      const clean = user.email.toLowerCase().trim();
+      if (user.email !== clean) {
+        user.email = clean;
+        await this.repo.save(user);
+        count++;
+      }
+    }
+    return { fixed: count };
   }
 }

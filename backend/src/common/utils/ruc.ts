@@ -10,7 +10,7 @@ export function validarRUC(ruc: string): boolean {
   const clean = (ruc || '').replace(/[^0-9]/g, '');
   if (clean.length !== 11) return false;
   // Ponderaciones para los 10 primeros dígitos
-  const weights = [5,4,3,2,7,6,5,4,3,2];
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
   let sum = 0;
   for (let i = 0; i < 10; i++) {
     const d = Number(clean[i]);
@@ -39,12 +39,38 @@ export type DatosRUC = {
  *  - SUNAT_API_BASE: base URL del proveedor (por ejemplo, https://apiperu.dev/api)
  *  - API_TOKEN_SUNAT: token de autenticación si el proveedor lo requiere
  */
-export async function obtenerDatosPorRUC(ruc: string): Promise<DatosRUC | null> {
+export async function obtenerDatosPorRUC(
+  ruc: string,
+): Promise<DatosRUC | null> {
   const clean = (ruc || '').replace(/[^0-9]/g, '');
   if (!validarRUC(clean)) return null;
 
   const base = process.env.SUNAT_API_BASE?.replace(/\/$/, '') || '';
-  const token = process.env.API_TOKEN_SUNAT || process.env.API_TOKEN_RENIEC || '';
+  const token =
+    process.env.API_TOKEN_SUNAT || process.env.API_TOKEN_RENIEC || '';
+
+  // Intento con Decolecta API (Prioridad)
+  if (token && token.startsWith('sk_')) {
+    try {
+      const url = `https://api.decolecta.com/v1/sunat/ruc/full?numero=${clean}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Mapeo respuesta Decolecta
+        return {
+          ruc: clean,
+          razonSocial: data.razon_social || data.nombre_o_razon_social,
+          nombreComercial: data.nombre_comercial,
+          direccion: data.direccion || data.domicilio_fiscal,
+          estado: data.estado,
+        };
+      }
+    } catch (err) {
+      console.warn('obtenerDatosPorRUC: error consultando Decolecta', err);
+    }
+  }
 
   // Intento con proveedor público si hay base configurada
   if (base) {
@@ -56,12 +82,21 @@ export async function obtenerDatosPorRUC(ruc: string): Promise<DatosRUC | null> 
       if (res.ok) {
         const data = await res.json();
         // Normalización defensiva
-        const razon = data?.razonSocial || data?.nombre_o_razon_social || data?.data?.nombre_o_razon_social;
+        const razon =
+          data?.razonSocial ||
+          data?.nombre_o_razon_social ||
+          data?.data?.nombre_o_razon_social;
         const comercio = data?.nombreComercial || data?.data?.nombre_comercial;
         const direccion = data?.direccion || data?.data?.direccion;
         const estado = data?.estado || data?.data?.estado;
         if (razon) {
-          return { ruc: clean, razonSocial: String(razon), nombreComercial: comercio ? String(comercio) : undefined, direccion: direccion ? String(direccion) : undefined, estado: estado ? String(estado) : undefined };
+          return {
+            ruc: clean,
+            razonSocial: String(razon),
+            nombreComercial: comercio ? String(comercio) : undefined,
+            direccion: direccion ? String(direccion) : undefined,
+            estado: estado ? String(estado) : undefined,
+          };
         }
       }
     } catch (err) {
@@ -79,4 +114,3 @@ export async function obtenerDatosPorRUC(ruc: string): Promise<DatosRUC | null> 
     estado: 'ACTIVO',
   };
 }
-

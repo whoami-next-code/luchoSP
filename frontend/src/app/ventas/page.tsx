@@ -30,9 +30,16 @@ function VentasPage() {
   const [resultadoCompra, setResultadoCompra] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState<'cart' | 'checkout' | 'payment'>('cart');
   const router = useRouter();
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api';
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
   const stripe = useStripe();
   const elements = useElements();
+
+  // Redirigir esta ruta a /pasarela para unificar el flujo
+  useEffect(() => {
+    try {
+      router.replace('/pasarela');
+    } catch {}
+  }, []);
 
   // Función para mostrar mensajes con tipo
   const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -128,7 +135,7 @@ function VentasPage() {
         shippingAddress: shippingAddress.trim(),
       };
       
-      const created = await apiFetchAuth("/api/pedidos", { method: "POST", body: JSON.stringify(payload) });
+      const created = await apiFetchAuth("/pedidos", { method: "POST", body: JSON.stringify(payload) });
       
       // Redirigir a pasarela de pago con datos necesarios
       const orderId = created?.id;

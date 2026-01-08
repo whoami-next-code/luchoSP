@@ -31,11 +31,13 @@ export class ContactosService {
     return await this.repo.find({ order: { creadoEn: 'DESC' } });
   }
 
-  async actualizarEstado(id: number, dto: ActualizarEstadoDto): Promise<Contacto | null> {
+  async actualizarEstado(
+    id: number,
+    dto: ActualizarEstadoDto,
+  ): Promise<Contacto | null> {
     const contacto = await this.repo.findOne({ where: { id } });
     if (!contacto) return null;
     contacto.estado = dto.estado;
     return await this.repo.save(contacto);
   }
 }
-
